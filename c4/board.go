@@ -38,11 +38,15 @@ func (b Board) Get(row, column int) Player {
 	return player
 }
 
-func (b Board) Set(row, column int, player Player) Board {
+func (b *Board) Set(row, column int, player Player) *Board {
 	if b.inBounds(row, column) {
 		b.data[row][column] = player
 	}
 	return b
+}
+
+func (b Board) inBounds(row, column int) bool {
+	return row >= 0 && row < b.rows && column >= 0 && column < b.columns
 }
 
 func (b Board) IsEqual(other Board) bool {
@@ -71,10 +75,6 @@ func (b Board) Clone() Board {
 	}
 
 	return clone
-}
-
-func (b Board) inBounds(row, column int) bool {
-	return row >= 0 && row < b.rows && column >= 0 && column < b.columns
 }
 
 func (b Board) Neighbor(row, column int, direction Direction) Player {

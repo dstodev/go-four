@@ -7,6 +7,7 @@ func (status GameStatus) String() string {
 		"Initial",
 		"Running",
 		"Completed",
+		"Tied",
 	}[status]
 }
 
@@ -14,4 +15,5 @@ const (
 	Initial GameStatus = iota
 	Running
 	Completed
+	Tied
 )
