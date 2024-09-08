@@ -108,8 +108,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case Place:
 				m.game.PlayTurn(m.column)
 				if m.game.Status() == c4.Completed || m.game.Status() == c4.Draw {
-					m.keys.Left.SetEnabled(false)
-					m.keys.Right.SetEnabled(false)
 					m.buttons = []button{Back, Quit}
 					m.cursor = 0
 				}
@@ -119,6 +117,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 		}
+	}
+
+	if m.buttons[m.cursor] == Place && m.game.Status() == c4.Running {
+		m.keys.Left.SetEnabled(true)
+		m.keys.Right.SetEnabled(true)
+	} else {
+		m.keys.Left.SetEnabled(false)
+		m.keys.Right.SetEnabled(false)
 	}
 
 	return m, nil
