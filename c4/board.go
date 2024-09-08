@@ -20,11 +20,11 @@ func NewBoard(rows, columns int) Board {
 	}
 }
 
-func (b Board) Rows() int {
+func (b Board) RowCount() int {
 	return b.rows
 }
 
-func (b Board) Columns() int {
+func (b Board) ColCount() int {
 	return b.columns
 }
 
@@ -43,6 +43,10 @@ func (b *Board) Set(row, column int, player Player) *Board {
 		b.data[row][column] = player
 	}
 	return b
+}
+
+func (b Board) Rows() [][]Player {
+	return b.data
 }
 
 func (b Board) inBounds(row, column int) bool {

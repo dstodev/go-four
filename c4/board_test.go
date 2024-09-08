@@ -9,8 +9,8 @@ import (
 func TestNewBoard(t *testing.T) {
 	b := c4.NewBoard(1, 2)
 
-	assertEqual(t, 1, b.Rows())
-	assertEqual(t, 2, b.Columns())
+	assertEqual(t, 1, b.RowCount())
+	assertEqual(t, 2, b.ColCount())
 	assertEqual(t, c4.None, b.Get(0, 0))
 }
 
@@ -115,12 +115,12 @@ func TestBoardCountDirection(t *testing.T) {
 		Set(3, 3, c4.Two)
 
 	/*
-		   0 1 2 3 4
-		0  - - R - R
-		1  - - R R -
-		2  - R R B R  <-- Test focuses on the center R at (2,2)
-		3  - R R B -
-		4  - - - - -  <-- and at the bottom-left (4,0)
+	     0 1 2 3 4
+	   0 - - R - R
+	   1 - - R R -
+	   2 - R R B R  <-- Test focuses on the center R at (2,2)
+	   3 - R R B -
+	   4 - - - - -  <-- and at the bottom-left (4,0)
 	*/
 
 	assertEqual(t, 3, b.CountDirection(2, 2, c4.North))
@@ -156,12 +156,12 @@ func TestBoardCountBidirection(t *testing.T) {
 		Set(3, 3, c4.Two)
 
 	/*
-		   0 1 2 3 4
-		0  - - R - R
-		1  - - R R -
-		2  - R R B R  <-- Test focuses on the center R at (2,2)
-		3  - R R B -
-		4  - - - - -  <-- and at the bottom-left (4,0)
+	     0 1 2 3 4
+	   0 - - R - R
+	   1 - - R R -
+	   2 - R R B R  <-- Test focuses on the center R at (2,2)
+	   3 - R R B -
+	   4 - - - - -  <-- and at the bottom-left (4,0)
 	*/
 
 	assertEqual(t, 4, b.CountBidirection(2, 2, c4.North))
@@ -178,4 +178,33 @@ func TestBoardCountBidirection(t *testing.T) {
 
 	// Out of bounds
 	assertEqual(t, 0, b.CountBidirection(-1, 0, c4.North))
+}
+
+func TestBoardRows(t *testing.T) {
+	b := c4.NewBoard(3, 4)
+
+	// Set up board
+	// 0 1 2 3
+	// 4 5 6 7
+	// 8 9 a b
+	b.
+		Set(0, 0, 0).
+		Set(0, 1, 1).
+		Set(0, 2, 2).
+		Set(0, 3, 3).
+		Set(1, 0, 4).
+		Set(1, 1, 5).
+		Set(1, 2, 6).
+		Set(1, 3, 7).
+		Set(2, 0, 8).
+		Set(2, 1, 9).
+		Set(2, 2, 10).
+		Set(2, 3, 11)
+
+	for i, row := range b.Rows() {
+		for j, cell := range row {
+			assertEqual(t, i*b.ColCount()+j, int(cell))
+		}
+	}
+
 }

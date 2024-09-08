@@ -23,3 +23,9 @@ func TestPlayerNegate(t *testing.T) {
 	assertEqual(t, c4.Two, c4.One.Negate())
 	assertEqual(t, c4.One, c4.Two.Negate())
 }
+
+func TestPlayerShort(t *testing.T) {
+	assertEqual(t, " ", c4.None.Short().String())
+	assertEqual(t, "A", c4.One.Short().String())
+	assertEqual(t, "B", c4.Two.Short().String())
+}

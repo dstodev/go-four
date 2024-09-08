@@ -13,15 +13,15 @@ func TestNewGame(t *testing.T) {
 	assertEqual(t, c4.None, game.Turn())
 	assertEqual(t, 0, game.TurnCount())
 
-	assertEqual(t, 6, game.Board().Rows())
-	assertEqual(t, 7, game.Board().Columns())
+	assertEqual(t, 6, game.Board().RowCount())
+	assertEqual(t, 7, game.Board().ColCount())
 }
 
 func TestNewGameSize(t *testing.T) {
 	game := c4.NewGame(2, 3)
 
-	assertEqual(t, 2, game.Board().Rows())
-	assertEqual(t, 3, game.Board().Columns())
+	assertEqual(t, 2, game.Board().RowCount())
+	assertEqual(t, 3, game.Board().ColCount())
 }
 
 func TestGameStart(t *testing.T) {
@@ -53,7 +53,7 @@ func TestGamePlayTurnOutOfBounds(t *testing.T) {
 
 	assertEqual(t, c4.One, game.Turn())
 
-	game.PlayTurn(game.Board().Columns())
+	game.PlayTurn(game.Board().ColCount())
 
 	assertEqual(t, true, board.IsEqual(game.Board()))
 	assertEqual(t, c4.Running, game.Status())
@@ -167,6 +167,7 @@ func TestFullGamePlayerOneWinsVertical(t *testing.T) {
 
 	assertEqual(t, c4.Running, game.Status())
 	assertEqual(t, c4.One, game.Turn())
+	assertEqual(t, 6, game.TurnCount())
 
 	game.PlayTurn(0)
 
@@ -174,6 +175,7 @@ func TestFullGamePlayerOneWinsVertical(t *testing.T) {
 
 	assertEqual(t, c4.Completed, game.Status())
 	assertEqual(t, c4.One, game.Turn())
+	assertEqual(t, 7, game.TurnCount())
 }
 
 func TestCannotPlayTurnAfterVictory(t *testing.T) {
@@ -231,6 +233,7 @@ func TestFullGamePlayerOneWinsLongHorizontal(t *testing.T) {
 
 	assertEqual(t, c4.Running, game.Status())
 	assertEqual(t, c4.One, game.Turn())
+	assertEqual(t, 8, game.TurnCount())
 
 	game.PlayTurn(3)
 
@@ -238,6 +241,7 @@ func TestFullGamePlayerOneWinsLongHorizontal(t *testing.T) {
 
 	assertEqual(t, c4.Completed, game.Status())
 	assertEqual(t, c4.One, game.Turn())
+	assertEqual(t, 9, game.TurnCount())
 }
 
 func TestFullGamePlayerOneWinsDiagonal(t *testing.T) {
@@ -277,6 +281,7 @@ func TestFullGamePlayerOneWinsDiagonal(t *testing.T) {
 
 	assertEqual(t, c4.Running, game.Status())
 	assertEqual(t, c4.One, game.Turn())
+	assertEqual(t, 10, game.TurnCount())
 
 	game.PlayTurn(2)
 
@@ -284,6 +289,7 @@ func TestFullGamePlayerOneWinsDiagonal(t *testing.T) {
 
 	assertEqual(t, c4.Completed, game.Status())
 	assertEqual(t, c4.One, game.Turn())
+	assertEqual(t, 11, game.TurnCount())
 }
 
 func TestFullGameNoWinner(t *testing.T) {
@@ -298,11 +304,13 @@ func TestFullGameNoWinner(t *testing.T) {
 
 	assertEqual(t, c4.Running, game.Status())
 	assertEqual(t, c4.Two, game.Turn())
+	assertEqual(t, 1, game.TurnCount())
 
 	game.PlayTurn(1)
 
-	assertEqual(t, c4.Tied, game.Status())
+	assertEqual(t, c4.Draw, game.Status())
 	assertEqual(t, c4.None, game.Turn())
+	assertEqual(t, 2, game.TurnCount())
 }
 
 func TestFullGameLastWinner(t *testing.T) {
@@ -350,6 +358,7 @@ func TestFullGameLastWinner(t *testing.T) {
 
 	assertEqual(t, c4.Running, game.Status())
 	assertEqual(t, c4.Two, game.Turn())
+	assertEqual(t, 15, game.TurnCount())
 
 	game.PlayTurn(3)
 
@@ -357,6 +366,7 @@ func TestFullGameLastWinner(t *testing.T) {
 
 	assertEqual(t, c4.Completed, game.Status())
 	assertEqual(t, c4.Two, game.Turn())
+	assertEqual(t, 16, game.TurnCount())
 }
 
 func TestGameStartResetsGame(t *testing.T) {

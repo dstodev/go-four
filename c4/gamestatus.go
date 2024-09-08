@@ -15,5 +15,5 @@ const (
 	Initial GameStatus = iota
 	Running
 	Completed
-	Tied
+	Draw
 )
