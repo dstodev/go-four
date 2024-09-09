@@ -151,10 +151,14 @@ func (m Model) View() string {
 	player1Style := lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.options.Player1Color))
 	player2Style := lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.options.Player2Color))
 
-	if m.game.Turn() == c4.One {
+	switch m.game.Turn() {
+	case c4.None:
+		// This style is used when there is a draw
+		playerStyle = lipgloss.NewStyle()
+	case c4.One:
 		playerName = m.options.Player1Name
 		playerStyle = player1Style
-	} else {
+	case c4.Two:
 		playerName = m.options.Player2Name
 		playerStyle = player2Style
 	}
