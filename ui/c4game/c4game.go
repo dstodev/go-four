@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/dstodev/go-four/c4"
 	"github.com/dstodev/go-four/ui/optionsmenu"
@@ -88,6 +89,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 
+		case key.Matches(msg, m.keys.Back):
+			m.outputs.Back = true
+
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
 
@@ -142,12 +146,20 @@ func (m Model) View() string {
 	view := "\n"
 
 	playerName := ""
+	var playerStyle lipgloss.Style
+
+	player1Style := lipgloss.NewStyle().Foreground(lipgloss.Color(m.options.Player1Color))
+	player2Style := lipgloss.NewStyle().Foreground(lipgloss.Color(m.options.Player2Color))
 
 	if m.game.Turn() == c4.One {
 		playerName = m.options.Player1Name
+		playerStyle = player1Style
 	} else {
 		playerName = m.options.Player2Name
+		playerStyle = player2Style
 	}
+
+	playerName = playerStyle.Render(playerName)
 
 	if m.game.Status() == c4.Running {
 		view += fmt.Sprintf("Turn: %s (#%d)", playerName, m.game.TurnCount())
@@ -160,7 +172,7 @@ func (m Model) View() string {
 	view += "\n\n"
 
 	view += " " + strings.Repeat("    ", m.column)
-	view += " ↓ \n"
+	view += " " + playerStyle.Render("↓") + " \n"
 
 	for i, r := range m.game.Board().Rows() {
 		view += "├"
@@ -177,7 +189,7 @@ func (m Model) View() string {
 			placementIndicator := (aboveToken || bottomRowColumn) && m.game.Status() == c4.Running
 
 			if placementIndicator {
-				view += "↓"
+				view += playerStyle.Render("↓")
 			} else {
 				view += " "
 			}
@@ -186,13 +198,13 @@ func (m Model) View() string {
 			case c4.None:
 				view += c.Short().String()
 			case c4.One:
-				view += m.options.Player1Indicator
+				view += player1Style.Render(m.options.Player1Indicator)
 			case c4.Two:
-				view += m.options.Player2Indicator
+				view += player2Style.Render(m.options.Player2Indicator)
 			}
 
 			if placementIndicator {
-				view += "↓"
+				view += playerStyle.Render("↓")
 			} else {
 				view += " "
 			}

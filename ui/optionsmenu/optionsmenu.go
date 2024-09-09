@@ -14,12 +14,15 @@ import (
 type Outputs struct {
 	Back bool
 
-	Rows             int
-	Columns          int
+	Rows    int
+	Columns int
+
 	Player1Name      string
 	Player1Indicator string
+	Player1Color     string
 	Player2Name      string
 	Player2Indicator string
+	Player2Color     string
 }
 
 type button int
@@ -29,10 +32,13 @@ const (
 
 	EnterRows
 	EnterColumns
+
 	EnterPlayer1Name
 	EnterPlayer1Indicator
+	EnterPlayer1Color
 	EnterPlayer2Name
 	EnterPlayer2Indicator
+	EnterPlayer2Color
 )
 
 func (b button) String() string {
@@ -43,8 +49,10 @@ func (b button) String() string {
 		"Columns",
 		"Player 1 Name",
 		"Player 1 Indicator",
+		"Player 1 Color",
 		"Player 2 Name",
 		"Player 2 Indicator",
+		"Player 2 Color",
 	}[b]
 }
 
@@ -62,8 +70,10 @@ type Model struct {
 	columns          textinput.Model
 	player1Name      textinput.Model
 	player1Indicator textinput.Model
+	player1Color     textinput.Model
 	player2Name      textinput.Model
 	player2Indicator textinput.Model
+	player2Color     textinput.Model
 
 	keys KeyMap
 	help help.Model
@@ -73,12 +83,15 @@ func New(outputs *Outputs) Model {
 	*outputs = Outputs{
 		Back: false,
 
-		Rows:             6,
-		Columns:          7,
+		Rows:    6,
+		Columns: 7,
+
 		Player1Name:      "Player One",
 		Player1Indicator: "A",
+		Player1Color:     "#ff0000",
 		Player2Name:      "Player Two",
 		Player2Indicator: "B",
+		Player2Color:     "#00ff00",
 	}
 
 	help := help.New()
@@ -88,7 +101,7 @@ func New(outputs *Outputs) Model {
 	rows.Placeholder = strconv.Itoa(outputs.Rows)
 	rows.CharLimit = 1
 	rows.Width = 1
-	rows.Prompt = EnterRows.String() + " (1-9): "
+	rows.Prompt = "   " + EnterRows.String() + " (1-9): "
 
 	columns := textinput.New()
 	columns.Placeholder = strconv.Itoa(outputs.Columns)
@@ -108,6 +121,12 @@ func New(outputs *Outputs) Model {
 	player1Indicator.Width = 1
 	player1Indicator.Prompt = EnterPlayer1Indicator.String() + ": "
 
+	player1Color := textinput.New()
+	player1Color.Placeholder = outputs.Player1Color
+	player1Color.CharLimit = 7
+	player1Color.Width = 7
+	player1Color.Prompt = EnterPlayer1Color.String() + ": "
+
 	player2Name := textinput.New()
 	player2Name.Placeholder = outputs.Player2Name
 	player2Name.CharLimit = 10
@@ -119,6 +138,12 @@ func New(outputs *Outputs) Model {
 	player2Indicator.CharLimit = 1
 	player2Indicator.Width = 1
 	player2Indicator.Prompt = EnterPlayer2Indicator.String() + ": "
+
+	player2Color := textinput.New()
+	player2Color.Placeholder = outputs.Player2Color
+	player2Color.CharLimit = 7
+	player2Color.Width = 7
+	player2Color.Prompt = EnterPlayer2Color.String() + ": "
 
 	return Model{
 		outputs: outputs,
@@ -132,10 +157,12 @@ func New(outputs *Outputs) Model {
 			EnterColumns,
 			EnterPlayer1Name,
 			EnterPlayer1Indicator,
+			EnterPlayer1Color,
 			EnterPlayer2Name,
 			EnterPlayer2Indicator,
+			EnterPlayer2Color,
 		},
-		height: 14,
+		height: 17,
 
 		currentTextbox: -1,
 
@@ -143,8 +170,10 @@ func New(outputs *Outputs) Model {
 		columns:          columns,
 		player1Name:      player1Name,
 		player1Indicator: player1Indicator,
+		player1Color:     player1Color,
 		player2Name:      player2Name,
 		player2Indicator: player2Indicator,
+		player2Color:     player2Color,
 
 		keys: Keys,
 		help: help,
@@ -164,6 +193,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
+
+		case key.Matches(msg, m.keys.Back):
+			m.outputs.Back = true
 
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
@@ -210,6 +242,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *Model) enterTextbox(textbox *textinput.Model) {
 	// Constrain keymap (would conflict with text input)
+	m.keys.Back.SetEnabled(false)
 	m.keys.Up.SetEnabled(false)
 	m.keys.Down.SetEnabled(false)
 	m.keys.Select.SetKeys("esc", "enter")
@@ -250,11 +283,17 @@ func (m *Model) updateOption(textbox *textinput.Model) {
 	case &m.player1Indicator:
 		m.outputs.Player1Indicator = valueOrPlaceholder(textbox)
 
+	case &m.player1Color:
+		m.outputs.Player1Color = valueOrPlaceholder(textbox)
+
 	case &m.player2Name:
 		m.outputs.Player2Name = valueOrPlaceholder(textbox)
 
 	case &m.player2Indicator:
 		m.outputs.Player2Indicator = valueOrPlaceholder(textbox)
+
+	case &m.player2Color:
+		m.outputs.Player2Color = valueOrPlaceholder(textbox)
 	}
 }
 
@@ -279,12 +318,19 @@ func (m *Model) toTextbox(button button) *textinput.Model {
 	case EnterPlayer1Indicator:
 		return &m.player1Indicator
 
+	case EnterPlayer1Color:
+		return &m.player1Color
+
 	case EnterPlayer2Name:
 		return &m.player2Name
 
 	case EnterPlayer2Indicator:
 		return &m.player2Indicator
+
+	case EnterPlayer2Color:
+		return &m.player2Color
 	}
+
 	return nil
 }
 
@@ -301,6 +347,11 @@ func (m Model) View() string {
 		switch b {
 		case Back:
 			view += fmt.Sprintf(" %s %s\n\n", cursor, b)
+
+		case EnterColumns:
+			// Special case to add another newline
+			textbox := m.toTextbox(b)
+			view += fmt.Sprintf(" %s %s\n\n", cursor, textbox.View())
 
 		default:
 			textbox := m.toTextbox(b)
