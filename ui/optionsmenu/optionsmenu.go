@@ -266,14 +266,19 @@ func (m *Model) leaveTextbox(textbox *textinput.Model) {
 	switch textbox {
 	case &m.player1Name:
 		opposite = &m.player2Name
+
 	case &m.player1Indicator:
 		opposite = &m.player2Indicator
+
 	case &m.player1Color:
 		opposite = &m.player2Color
+
 	case &m.player2Name:
 		opposite = &m.player1Name
+
 	case &m.player2Indicator:
 		opposite = &m.player1Indicator
+
 	case &m.player2Color:
 		opposite = &m.player1Color
 	}
