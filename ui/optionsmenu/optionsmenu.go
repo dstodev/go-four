@@ -96,11 +96,11 @@ func New(outputs *Outputs) Model {
 
 		Player1Name:      "Player One",
 		Player1Indicator: "A",
-		Player1Color:     "ff0000",
+		Player1Color:     "009fff",
 
 		Player2Name:      "Player Two",
 		Player2Indicator: "B",
-		Player2Color:     "00ff00",
+		Player2Color:     "ff7f00",
 	}
 
 	help := help.New()
@@ -130,8 +130,8 @@ func New(outputs *Outputs) Model {
 
 	player1Color := textinput.New()
 	player1Color.Placeholder = outputs.Player1Color
-	player1Color.CharLimit = 7
-	player1Color.Width = 7
+	player1Color.CharLimit = 6
+	player1Color.Width = 6
 
 	player2Name := textinput.New()
 	player2Name.Placeholder = outputs.Player2Name
@@ -145,8 +145,8 @@ func New(outputs *Outputs) Model {
 
 	player2Color := textinput.New()
 	player2Color.Placeholder = outputs.Player2Color
-	player2Color.CharLimit = 7
-	player2Color.Width = 7
+	player2Color.CharLimit = 6
+	player2Color.Width = 6
 
 	return Model{
 		outputs: outputs,
