@@ -148,8 +148,8 @@ func (m Model) View() string {
 	playerName := ""
 	var playerStyle lipgloss.Style
 
-	player1Style := lipgloss.NewStyle().Foreground(lipgloss.Color(m.options.Player1Color))
-	player2Style := lipgloss.NewStyle().Foreground(lipgloss.Color(m.options.Player2Color))
+	player1Style := lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.options.Player1Color))
+	player2Style := lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.options.Player2Color))
 
 	if m.game.Turn() == c4.One {
 		playerName = m.options.Player1Name

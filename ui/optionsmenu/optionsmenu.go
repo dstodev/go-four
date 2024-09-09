@@ -2,6 +2,7 @@ package optionsmenu
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Outputs struct {
@@ -20,6 +22,7 @@ type Outputs struct {
 	Player1Name      string
 	Player1Indicator string
 	Player1Color     string
+
 	Player2Name      string
 	Player2Indicator string
 	Player2Color     string
@@ -36,6 +39,7 @@ const (
 	EnterPlayer1Name
 	EnterPlayer1Indicator
 	EnterPlayer1Color
+
 	EnterPlayer2Name
 	EnterPlayer2Indicator
 	EnterPlayer2Color
@@ -47,12 +51,12 @@ func (b button) String() string {
 
 		"Rows",
 		"Columns",
-		"Player 1 Name",
-		"Player 1 Indicator",
-		"Player 1 Color",
-		"Player 2 Name",
-		"Player 2 Indicator",
-		"Player 2 Color",
+		"Player 1 name",
+		"Player 1 indicator",
+		"Player 1 color",
+		"Player 2 name",
+		"Player 2 indicator",
+		"Player 2 color",
 	}[b]
 }
 
@@ -66,11 +70,13 @@ type Model struct {
 
 	currentTextbox button
 
-	rows             textinput.Model
-	columns          textinput.Model
+	rows    textinput.Model
+	columns textinput.Model
+
 	player1Name      textinput.Model
 	player1Indicator textinput.Model
 	player1Color     textinput.Model
+
 	player2Name      textinput.Model
 	player2Indicator textinput.Model
 	player2Color     textinput.Model
@@ -88,10 +94,11 @@ func New(outputs *Outputs) Model {
 
 		Player1Name:      "Player One",
 		Player1Indicator: "A",
-		Player1Color:     "#ff0000",
+		Player1Color:     "ff0000",
+
 		Player2Name:      "Player Two",
 		Player2Indicator: "B",
-		Player2Color:     "#00ff00",
+		Player2Color:     "00ff00",
 	}
 
 	help := help.New()
@@ -113,37 +120,31 @@ func New(outputs *Outputs) Model {
 	player1Name.Placeholder = outputs.Player1Name
 	player1Name.CharLimit = 10
 	player1Name.Width = 10
-	player1Name.Prompt = EnterPlayer1Name.String() + ": "
 
 	player1Indicator := textinput.New()
 	player1Indicator.Placeholder = outputs.Player1Indicator
 	player1Indicator.CharLimit = 1
 	player1Indicator.Width = 1
-	player1Indicator.Prompt = EnterPlayer1Indicator.String() + ": "
 
 	player1Color := textinput.New()
 	player1Color.Placeholder = outputs.Player1Color
 	player1Color.CharLimit = 7
 	player1Color.Width = 7
-	player1Color.Prompt = EnterPlayer1Color.String() + ": "
 
 	player2Name := textinput.New()
 	player2Name.Placeholder = outputs.Player2Name
 	player2Name.CharLimit = 10
 	player2Name.Width = 10
-	player2Name.Prompt = EnterPlayer2Name.String() + ": "
 
 	player2Indicator := textinput.New()
 	player2Indicator.Placeholder = outputs.Player2Indicator
 	player2Indicator.CharLimit = 1
 	player2Indicator.Width = 1
-	player2Indicator.Prompt = EnterPlayer2Indicator.String() + ": "
 
 	player2Color := textinput.New()
 	player2Color.Placeholder = outputs.Player2Color
 	player2Color.CharLimit = 7
 	player2Color.Width = 7
-	player2Color.Prompt = EnterPlayer2Color.String() + ": "
 
 	return Model{
 		outputs: outputs,
@@ -162,7 +163,7 @@ func New(outputs *Outputs) Model {
 			EnterPlayer2Indicator,
 			EnterPlayer2Color,
 		},
-		height: 17,
+		height: 18,
 
 		currentTextbox: -1,
 
@@ -248,11 +249,37 @@ func (m *Model) enterTextbox(textbox *textinput.Model) {
 	m.keys.Select.SetKeys("esc", "enter")
 	m.keys.Select.SetHelp("esc/enter", "Confirm")
 
+	textbox.Reset()
 	textbox.Focus()
 	textbox.CursorEnd()
 }
 
 func (m *Model) leaveTextbox(textbox *textinput.Model) {
+	var opposite *textinput.Model
+
+	switch textbox {
+	case &m.player1Name:
+		opposite = &m.player2Name
+	case &m.player1Indicator:
+		opposite = &m.player2Indicator
+	case &m.player1Color:
+		opposite = &m.player2Color
+	case &m.player2Name:
+		opposite = &m.player1Name
+	case &m.player2Indicator:
+		opposite = &m.player1Indicator
+	case &m.player2Color:
+		opposite = &m.player1Color
+	}
+
+	if strings.EqualFold(valueOrPlaceholder(textbox), valueOrPlaceholder(opposite)) {
+		textbox.Reset()
+
+		if strings.EqualFold(valueOrPlaceholder(textbox), valueOrPlaceholder(opposite)) {
+			textbox.SetValue(opposite.Placeholder)
+		}
+	}
+
 	m.updateOption(textbox)
 
 	// Reset keymap
@@ -284,6 +311,13 @@ func (m *Model) updateOption(textbox *textinput.Model) {
 		m.outputs.Player1Indicator = valueOrPlaceholder(textbox)
 
 	case &m.player1Color:
+		value := valueOrPlaceholder(textbox)
+		regexp.Compile("[0-9a-fA-F]{6}")
+
+		if !regexp.MustCompile("[0-9a-fA-F]{6}").MatchString(value) {
+			textbox.Reset()
+		}
+
 		m.outputs.Player1Color = valueOrPlaceholder(textbox)
 
 	case &m.player2Name:
@@ -293,6 +327,13 @@ func (m *Model) updateOption(textbox *textinput.Model) {
 		m.outputs.Player2Indicator = valueOrPlaceholder(textbox)
 
 	case &m.player2Color:
+		value := valueOrPlaceholder(textbox)
+		regexp.Compile("[0-9a-fA-F]{6}")
+
+		if !regexp.MustCompile("[0-9a-fA-F]{6}").MatchString(value) {
+			textbox.Reset()
+		}
+
 		m.outputs.Player2Color = valueOrPlaceholder(textbox)
 	}
 }
@@ -337,6 +378,9 @@ func (m *Model) toTextbox(button button) *textinput.Model {
 func (m Model) View() string {
 	view := "\nGo Four options:\n\n"
 
+	player1Style := lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.outputs.Player1Color))
+	player2Style := lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.outputs.Player2Color))
+
 	for _, b := range m.buttons {
 		cursor := " "
 
@@ -349,9 +393,38 @@ func (m Model) View() string {
 			view += fmt.Sprintf(" %s %s\n\n", cursor, b)
 
 		case EnterColumns:
-			// Special case to add another newline
 			textbox := m.toTextbox(b)
-			view += fmt.Sprintf(" %s %s\n\n", cursor, textbox.View())
+			view += fmt.Sprintf(" %s %s\n\n", cursor, textbox.View()) // extra newline
+
+		case EnterPlayer1Name:
+			textbox := m.toTextbox(b)
+			textbox.Prompt = player1Style.Render(EnterPlayer1Name.String() + ": ")
+			view += fmt.Sprintf(" %s %s\n", cursor, textbox.View())
+
+		case EnterPlayer1Indicator:
+			textbox := m.toTextbox(b)
+			textbox.Prompt = player1Style.Render(EnterPlayer1Indicator.String() + ": ")
+			view += fmt.Sprintf(" %s %s\n", cursor, textbox.View())
+
+		case EnterPlayer1Color:
+			textbox := m.toTextbox(b)
+			textbox.Prompt = player1Style.Render(EnterPlayer1Color.String()+": ") + "#"
+			view += fmt.Sprintf(" %s %s\n\n", cursor, textbox.View()) // extra newline
+
+		case EnterPlayer2Name:
+			textbox := m.toTextbox(b)
+			textbox.Prompt = player2Style.Render(EnterPlayer2Name.String() + ": ")
+			view += fmt.Sprintf(" %s %s\n", cursor, textbox.View())
+
+		case EnterPlayer2Indicator:
+			textbox := m.toTextbox(b)
+			textbox.Prompt = player2Style.Render(EnterPlayer2Indicator.String() + ": ")
+			view += fmt.Sprintf(" %s %s\n", cursor, textbox.View())
+
+		case EnterPlayer2Color:
+			textbox := m.toTextbox(b)
+			textbox.Prompt = player2Style.Render(EnterPlayer2Color.String()+": ") + "#"
+			view += fmt.Sprintf(" %s %s\n", cursor, textbox.View())
 
 		default:
 			textbox := m.toTextbox(b)
