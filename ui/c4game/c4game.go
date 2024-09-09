@@ -179,7 +179,7 @@ func (m Model) View() string {
 	view += " " + playerStyle.Render("↓") + " \n"
 
 	for i, r := range m.game.Board().Rows() {
-		view += "├"
+		view += "┤"
 
 		for j, c := range r {
 			aboveToken := m.game.Board().Get(i, j) == c4.None &&
@@ -216,7 +216,7 @@ func (m Model) View() string {
 			if j < m.game.Board().ColCount()-1 {
 				view += "│"
 			} else {
-				view += "┤"
+				view += "├"
 			}
 		}
 
