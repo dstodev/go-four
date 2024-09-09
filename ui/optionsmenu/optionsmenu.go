@@ -88,13 +88,13 @@ func New(outputs *Outputs) Model {
 	rows.Placeholder = strconv.Itoa(outputs.Rows)
 	rows.CharLimit = 1
 	rows.Width = 1
-	rows.Prompt = EnterRows.String() + ": "
+	rows.Prompt = EnterRows.String() + " (1-9): "
 
 	columns := textinput.New()
 	columns.Placeholder = strconv.Itoa(outputs.Columns)
 	columns.CharLimit = 1
 	columns.Width = 1
-	columns.Prompt = EnterColumns.String() + ": "
+	columns.Prompt = EnterColumns.String() + " (1-9): "
 
 	player1Name := textinput.New()
 	player1Name.Placeholder = outputs.Player1Name
