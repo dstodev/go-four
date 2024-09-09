@@ -1,4 +1,4 @@
-package c4_game
+package c4game
 
 import (
 	"fmt"
@@ -9,7 +9,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/dstodev/go-four/c4"
+	"github.com/dstodev/go-four/ui/optionsmenu"
 )
+
+type Outputs struct {
+	Back bool
+}
 
 type button int
 
@@ -28,13 +33,13 @@ func (b button) String() string {
 }
 
 type Model struct {
-	Back bool
+	outputs *Outputs
+	options optionsmenu.Outputs
 
 	cursor int
 	column int
 
 	buttons []button
-	height  int
 
 	game c4.Game
 
@@ -42,12 +47,16 @@ type Model struct {
 	help help.Model
 }
 
-func New() Model {
-	game := c4.NewGame()
+func New(outputs *Outputs, options optionsmenu.Outputs) Model {
+	game := c4.NewGame(options.Rows, options.Columns)
 	game.Start()
 
+	help := help.New()
+	help.ShowAll = true
+
 	return Model{
-		Back: false,
+		outputs: outputs,
+		options: options,
 
 		cursor: 0,
 		column: 0,
@@ -57,12 +66,11 @@ func New() Model {
 			Back,
 			Quit,
 		},
-		height: 24,
 
 		game: game,
 
 		keys: Keys,
-		help: help.New(),
+		help: help,
 	}
 }
 
@@ -112,7 +120,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.cursor = 0
 				}
 			case Back:
-				m.Back = true
+				m.outputs.Back = true
 			case Quit:
 				return m, tea.Quit
 			}
@@ -133,10 +141,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	view := "\n"
 
+	playerName := ""
+
+	if m.game.Turn() == c4.One {
+		playerName = m.options.Player1Name
+	} else {
+		playerName = m.options.Player2Name
+	}
+
 	if m.game.Status() == c4.Running {
-		view += fmt.Sprintf("Turn: Player %s (#%d)", m.game.Turn(), m.game.TurnCount())
+		view += fmt.Sprintf("Turn: %s (#%d)", playerName, m.game.TurnCount())
 	} else if m.game.Status() == c4.Completed {
-		view += fmt.Sprintf("Game over! Player %s wins! (Turn #%d)", m.game.Turn(), m.game.TurnCount())
+		view += fmt.Sprintf("Game over! %s wins! (Turn #%d)", playerName, m.game.TurnCount())
 	} else {
 		view += "Draw!"
 	}
@@ -166,7 +182,14 @@ func (m Model) View() string {
 				view += " "
 			}
 
-			view += c.Short().String()
+			switch c {
+			case c4.None:
+				view += c.Short().String()
+			case c4.One:
+				view += m.options.Player1Indicator
+			case c4.Two:
+				view += m.options.Player2Indicator
+			}
 
 			if placementIndicator {
 				view += "↓"

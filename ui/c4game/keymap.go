@@ -1,4 +1,4 @@
-package c4_game
+package c4game
 
 import "github.com/charmbracelet/bubbles/key"
 

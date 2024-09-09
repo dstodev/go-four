@@ -7,7 +7,8 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/dstodev/go-four/ui/c4_game"
+	"github.com/dstodev/go-four/ui/c4game"
+	"github.com/dstodev/go-four/ui/optionsmenu"
 )
 
 type button int
@@ -43,13 +44,20 @@ type Model struct {
 	menu    menu
 	height  int
 
-	game c4_game.Model
+	game    tea.Model
+	gameOut *c4game.Outputs
+
+	options    tea.Model
+	optionsOut *optionsmenu.Outputs
 
 	keys KeyMap
 	help help.Model
 }
 
 func New() Model {
+	gameOut := &c4game.Outputs{}
+	optionsOut := &optionsmenu.Outputs{}
+
 	return Model{
 		cursor: 0,
 
@@ -62,7 +70,11 @@ func New() Model {
 		menu:   menuMain,
 		height: 10,
 
-		game: c4_game.New(),
+		game:    nil,
+		gameOut: gameOut,
+
+		options:    optionsmenu.New(optionsOut),
+		optionsOut: optionsOut,
 
 		keys: Keys,
 		help: help.New(),
@@ -86,14 +98,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.internalUpdate(msg)
 
 	case menuGame:
-		var model tea.Model
-		model, cmd = m.game.Update(msg)
+		m.game, cmd = m.game.Update(msg)
 
-		m.game = model.(c4_game.Model)
-
-		if m.game.Back {
+		if m.gameOut.Back {
 			m.menu = menuMain
-			m.game.Back = false
+			m.gameOut.Back = false
+		}
+
+	case menuOptions:
+		m.options, cmd = m.options.Update(msg)
+
+		if m.optionsOut.Back {
+			m.menu = menuMain
+			m.optionsOut.Back = false
 		}
 	}
 
@@ -123,10 +140,10 @@ func (m *Model) internalUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Select):
 			switch m.buttons[m.cursor] {
 			case buttonNewGame:
-				m.game = c4_game.New()
+				m.game = c4game.New(m.gameOut, *m.optionsOut)
 				m.menu = menuGame
 			case buttonOptions:
-				// TODO: Allow changing board size, player character
+				m.menu = menuOptions
 			case buttonHelp:
 				m.help.ShowAll = !m.help.ShowAll
 			case buttonQuit:
@@ -143,6 +160,8 @@ func (m Model) View() string {
 		return m.internalView()
 	case menuGame:
 		return m.game.View()
+	case menuOptions:
+		return m.options.View()
 	}
 
 	return ""
