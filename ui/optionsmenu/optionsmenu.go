@@ -51,9 +51,11 @@ func (b button) String() string {
 
 		"Rows",
 		"Columns",
+
 		"Player 1 name",
 		"Player 1 indicator",
 		"Player 1 color",
+
 		"Player 2 name",
 		"Player 2 indicator",
 		"Player 2 color",
@@ -156,9 +158,11 @@ func New(outputs *Outputs) Model {
 
 			EnterRows,
 			EnterColumns,
+
 			EnterPlayer1Name,
 			EnterPlayer1Indicator,
 			EnterPlayer1Color,
+
 			EnterPlayer2Name,
 			EnterPlayer2Indicator,
 			EnterPlayer2Color,
@@ -167,11 +171,13 @@ func New(outputs *Outputs) Model {
 
 		currentTextbox: -1,
 
-		rows:             rows,
-		columns:          columns,
+		rows:    rows,
+		columns: columns,
+
 		player1Name:      player1Name,
 		player1Indicator: player1Indicator,
 		player1Color:     player1Color,
+
 		player2Name:      player2Name,
 		player2Indicator: player2Indicator,
 		player2Color:     player2Color,
@@ -272,9 +278,10 @@ func (m *Model) leaveTextbox(textbox *textinput.Model) {
 		opposite = &m.player1Color
 	}
 
-	if strings.EqualFold(valueOrPlaceholder(textbox), valueOrPlaceholder(opposite)) {
+	if opposite != nil && strings.EqualFold(valueOrPlaceholder(textbox), valueOrPlaceholder(opposite)) {
 		textbox.Reset()
 
+		// If the reset causes a conflict, use the placeholder of the opposite textbox
 		if strings.EqualFold(valueOrPlaceholder(textbox), valueOrPlaceholder(opposite)) {
 			textbox.SetValue(opposite.Placeholder)
 		}
