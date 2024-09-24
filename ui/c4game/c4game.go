@@ -49,7 +49,7 @@ type Model struct {
 }
 
 func New(outputs *Outputs, options optionsmenu.Outputs) Model {
-	game := c4.NewGame(options.Rows, options.Columns)
+	game := c4.NewGame(options.Rows, options.Columns, options.ToWin, options.MaxTurns)
 	game.Start()
 
 	help := help.New()
@@ -165,21 +165,32 @@ func (m Model) View() string {
 
 	playerName = playerStyle.Render(playerName)
 
+	view += " "
+
 	if m.game.Status() == c4.Running {
-		view += fmt.Sprintf("Turn: %s (#%d)", playerName, m.game.TurnCount())
+		var maxTurns string
+
+		if m.game.MaxTurns() > 0 {
+			maxTurns = fmt.Sprintf(" of %d", m.game.MaxTurns())
+		}
+
+		view += fmt.Sprintf("Turn: %s (#%d%s)", playerName, m.game.TurnCount(), maxTurns)
 	} else if m.game.Status() == c4.Completed {
 		view += fmt.Sprintf("Game over! %s wins! (Turn #%d)", playerName, m.game.TurnCount())
 	} else {
-		view += "Draw!"
+		view += fmt.Sprintf("Draw on turn %d!", m.game.TurnCount())
 	}
 
 	view += "\n\n"
 
+	boardLeftPadLength := 4
+	boardLeftPad := strings.Repeat(" ", boardLeftPadLength)
+
 	view += " " + strings.Repeat("    ", m.column)
-	view += " " + playerStyle.Render("↓") + " \n"
+	view += boardLeftPad + " " + playerStyle.Render("↓") + " \n"
 
 	for i, r := range m.game.Board().Rows() {
-		view += "┤"
+		view += boardLeftPad + "┤"
 
 		for j, c := range r {
 			aboveToken := m.game.Board().Get(i, j) == c4.None &&
@@ -221,12 +232,12 @@ func (m Model) View() string {
 		}
 
 		if i < m.game.Board().RowCount()-1 {
-			view += "\n├" + strings.Repeat("───┼", m.game.Board().ColCount()-1) + "───┤"
+			view += "\n" + boardLeftPad + "├" + strings.Repeat("───┼", m.game.Board().ColCount()-1) + "───┤"
 		}
 
 		view += "\n"
 	}
-	view += "├" + strings.Repeat("───┴", m.game.Board().ColCount()-1) + "───┤\n"
+	view += boardLeftPad + "├" + strings.Repeat("───┴", m.game.Board().ColCount()-1) + "───┤\n"
 
 	view += "\n"
 

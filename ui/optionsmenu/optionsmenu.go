@@ -2,22 +2,24 @@ package optionsmenu
 
 import (
 	"fmt"
-	"regexp"
-	"strconv"
+	"sort"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	tb "github.com/dstodev/go-four/ui/textbox"
 )
 
 type Outputs struct {
 	Back bool
 
-	Rows    int
-	Columns int
+	Rows     int
+	Columns  int
+	ToWin    int
+	MaxTurns int
 
 	Player1Name      string
 	Player1Indicator string
@@ -28,60 +30,16 @@ type Outputs struct {
 	Player2Color     string
 }
 
-type button int
-
-const (
-	Back button = iota
-
-	EnterRows
-	EnterColumns
-
-	EnterPlayer1Name
-	EnterPlayer1Indicator
-	EnterPlayer1Color
-
-	EnterPlayer2Name
-	EnterPlayer2Indicator
-	EnterPlayer2Color
-)
-
-func (b button) String() string {
-	return [...]string{
-		"Back",
-
-		"Rows",
-		"Columns",
-
-		"Player 1 name",
-		"Player 1 indicator",
-		"Player 1 color",
-
-		"Player 2 name",
-		"Player 2 indicator",
-		"Player 2 color",
-	}[b]
-}
-
 type Model struct {
 	outputs *Outputs
 
 	cursor int
+	height int
 
-	buttons []button
-	height  int
+	buttons []action
 
-	currentTextbox button
-
-	rows    textinput.Model
-	columns textinput.Model
-
-	player1Name      textinput.Model
-	player1Indicator textinput.Model
-	player1Color     textinput.Model
-
-	player2Name      textinput.Model
-	player2Indicator textinput.Model
-	player2Color     textinput.Model
+	inputs         map[action]tb.Model
+	currentTextbox action
 
 	keys KeyMap
 	help help.Model
@@ -91,8 +49,10 @@ func New(outputs *Outputs) Model {
 	*outputs = Outputs{
 		Back: false,
 
-		Rows:    6,
-		Columns: 7,
+		Rows:     6,
+		Columns:  7,
+		ToWin:    4,
+		MaxTurns: 0,
 
 		Player1Name:      "Player One",
 		Player1Indicator: "A",
@@ -106,81 +66,42 @@ func New(outputs *Outputs) Model {
 	help := help.New()
 	help.ShowAll = true
 
-	rows := textinput.New()
-	rows.Placeholder = strconv.Itoa(outputs.Rows)
-	rows.CharLimit = 1
-	rows.Width = 1
-	rows.Prompt = "   " + EnterRows.String() + " (1-9): "
+	inputs := map[action]tb.Model{
+		EnterRows:     tb.NewInteger(&outputs.Rows, 1, tb.ConstrainGreaterEq(4)).WithLabel(EnterRows.String() + "    (4-9): "),
+		EnterColumns:  tb.NewInteger(&outputs.Columns, 1, tb.ConstrainGreaterEq(4)).WithLabel(EnterColumns.String() + " (4-9): "),
+		EnterToWin:    tb.NewInteger(&outputs.ToWin, 1, tb.ConstrainGreaterEq(3)).WithLabel(EnterToWin.String() + "  (3-9): "),
+		EnterMaxTurns: tb.NewInteger(&outputs.MaxTurns, 3, tb.ConstrainGreaterEqZero, tb.ConstrainLessEq(100)).WithLabel(EnterMaxTurns.String() + " (0-100): "),
 
-	columns := textinput.New()
-	columns.Placeholder = strconv.Itoa(outputs.Columns)
-	columns.CharLimit = 1
-	columns.Width = 1
-	columns.Prompt = EnterColumns.String() + " (1-9): "
+		EnterPlayer1Name:      tb.NewString(&outputs.Player1Name, 10),
+		EnterPlayer1Indicator: tb.NewString(&outputs.Player1Indicator, 1),
+		EnterPlayer1Color:     tb.NewColor(&outputs.Player1Color),
 
-	player1Name := textinput.New()
-	player1Name.Placeholder = outputs.Player1Name
-	player1Name.CharLimit = 10
-	player1Name.Width = 10
+		EnterPlayer2Name:      tb.NewString(&outputs.Player2Name, 10),
+		EnterPlayer2Indicator: tb.NewString(&outputs.Player2Indicator, 1),
+		EnterPlayer2Color:     tb.NewColor(&outputs.Player2Color),
+	}
 
-	player1Indicator := textinput.New()
-	player1Indicator.Placeholder = outputs.Player1Indicator
-	player1Indicator.CharLimit = 1
-	player1Indicator.Width = 1
+	buttons := []action{
+		Back,
+	}
 
-	player1Color := textinput.New()
-	player1Color.Placeholder = outputs.Player1Color
-	player1Color.CharLimit = 6
-	player1Color.Width = 6
-
-	player2Name := textinput.New()
-	player2Name.Placeholder = outputs.Player2Name
-	player2Name.CharLimit = 10
-	player2Name.Width = 10
-
-	player2Indicator := textinput.New()
-	player2Indicator.Placeholder = outputs.Player2Indicator
-	player2Indicator.CharLimit = 1
-	player2Indicator.Width = 1
-
-	player2Color := textinput.New()
-	player2Color.Placeholder = outputs.Player2Color
-	player2Color.CharLimit = 6
-	player2Color.Width = 6
+	for b := range inputs {
+		buttons = append(buttons, b)
+	}
+	sort.Slice(buttons, func(i, j int) bool {
+		return buttons[i] < buttons[j]
+	})
 
 	return Model{
 		outputs: outputs,
 
 		cursor: 0,
+		height: 20,
 
-		buttons: []button{
-			Back,
+		buttons: buttons,
 
-			EnterRows,
-			EnterColumns,
-
-			EnterPlayer1Name,
-			EnterPlayer1Indicator,
-			EnterPlayer1Color,
-
-			EnterPlayer2Name,
-			EnterPlayer2Indicator,
-			EnterPlayer2Color,
-		},
-		height: 18,
-
+		inputs:         inputs,
 		currentTextbox: -1,
-
-		rows:    rows,
-		columns: columns,
-
-		player1Name:      player1Name,
-		player1Indicator: player1Indicator,
-		player1Color:     player1Color,
-
-		player2Name:      player2Name,
-		player2Indicator: player2Indicator,
-		player2Color:     player2Color,
 
 		keys: Keys,
 		help: help,
@@ -192,6 +113,10 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	forwardMsg := true
+
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.help.Width = msg.Width
@@ -225,170 +150,57 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.outputs.Back = true
 
 			default:
+				box := m.inputs[b]
+
 				if m.currentTextbox == -1 {
 					m.currentTextbox = b
-					m.enterTextbox(m.toTextbox(b))
-					return m, nil
+					forwardMsg = false
+
+					m.constrainKeymap()
+					cmd = box.Enter()
 				} else {
 					m.currentTextbox = -1
-					m.leaveTextbox(m.toTextbox(b))
+
+					m.resetKeymap()
+
+					var oppositeBox *tb.Model = nil
+
+					if opposite := b.Opposite(); opposite != -1 {
+						copy := m.inputs[opposite]
+						oppositeBox = &copy
+					}
+					box.Leave(oppositeBox)
 				}
+
+				m.inputs[b] = box
 			}
 		}
 	}
 
-	var cmd tea.Cmd
-
-	if m.currentTextbox != -1 {
-		textbox := m.toTextbox(m.currentTextbox)
-		*textbox, cmd = textbox.Update(msg)
+	if forwardMsg && m.currentTextbox != -1 {
+		box := m.inputs[m.currentTextbox]
+		var newBox tea.Model
+		newBox, cmd = box.Update(msg)
+		m.inputs[m.currentTextbox] = newBox.(tb.Model)
 	}
 
 	return m, cmd
 }
 
-func (m *Model) enterTextbox(textbox *textinput.Model) {
-	// Constrain keymap (would conflict with text input)
+func (m *Model) constrainKeymap() {
 	m.keys.Back.SetEnabled(false)
 	m.keys.Up.SetEnabled(false)
 	m.keys.Down.SetEnabled(false)
 	m.keys.Select.SetKeys("esc", "enter")
 	m.keys.Select.SetHelp("esc/enter", "Confirm")
-
-	textbox.Reset()
-	textbox.Focus()
-	textbox.CursorEnd()
 }
 
-func (m *Model) leaveTextbox(textbox *textinput.Model) {
-	var opposite *textinput.Model
-
-	switch textbox {
-	case &m.player1Name:
-		opposite = &m.player2Name
-
-	case &m.player1Indicator:
-		opposite = &m.player2Indicator
-
-	case &m.player1Color:
-		opposite = &m.player2Color
-
-	case &m.player2Name:
-		opposite = &m.player1Name
-
-	case &m.player2Indicator:
-		opposite = &m.player1Indicator
-
-	case &m.player2Color:
-		opposite = &m.player1Color
-	}
-
-	if opposite != nil && strings.EqualFold(valueOrPlaceholder(textbox), valueOrPlaceholder(opposite)) {
-		textbox.Reset()
-
-		// If the reset causes a conflict, use the placeholder of the opposite textbox
-		if strings.EqualFold(valueOrPlaceholder(textbox), valueOrPlaceholder(opposite)) {
-			textbox.SetValue(opposite.Placeholder)
-		}
-	}
-
-	m.updateOption(textbox)
-
-	// Reset keymap
+func (m *Model) resetKeymap() {
 	m.keys = Keys
-
-	textbox.Blur()
-}
-
-func (m *Model) updateOption(textbox *textinput.Model) {
-	switch textbox {
-	case &m.rows:
-		if rows, err := strconv.Atoi(valueOrPlaceholder(textbox)); err == nil && rows > 0 {
-			m.outputs.Rows = rows
-		} else {
-			textbox.Reset()
-		}
-
-	case &m.columns:
-		if columns, err := strconv.Atoi(valueOrPlaceholder(textbox)); err == nil && columns > 0 {
-			m.outputs.Columns = columns
-		} else {
-			textbox.Reset()
-		}
-
-	case &m.player1Name:
-		m.outputs.Player1Name = valueOrPlaceholder(textbox)
-
-	case &m.player1Indicator:
-		m.outputs.Player1Indicator = valueOrPlaceholder(textbox)
-
-	case &m.player1Color:
-		value := valueOrPlaceholder(textbox)
-		regexp.Compile("[0-9a-fA-F]{6}")
-
-		if !regexp.MustCompile("[0-9a-fA-F]{6}").MatchString(value) {
-			textbox.Reset()
-		}
-
-		m.outputs.Player1Color = valueOrPlaceholder(textbox)
-
-	case &m.player2Name:
-		m.outputs.Player2Name = valueOrPlaceholder(textbox)
-
-	case &m.player2Indicator:
-		m.outputs.Player2Indicator = valueOrPlaceholder(textbox)
-
-	case &m.player2Color:
-		value := valueOrPlaceholder(textbox)
-		regexp.Compile("[0-9a-fA-F]{6}")
-
-		if !regexp.MustCompile("[0-9a-fA-F]{6}").MatchString(value) {
-			textbox.Reset()
-		}
-
-		m.outputs.Player2Color = valueOrPlaceholder(textbox)
-	}
-}
-
-func valueOrPlaceholder(input *textinput.Model) string {
-	if input.Value() == "" {
-		return input.Placeholder
-	}
-	return input.Value()
-}
-
-func (m *Model) toTextbox(button button) *textinput.Model {
-	switch button {
-	case EnterRows:
-		return &m.rows
-
-	case EnterColumns:
-		return &m.columns
-
-	case EnterPlayer1Name:
-		return &m.player1Name
-
-	case EnterPlayer1Indicator:
-		return &m.player1Indicator
-
-	case EnterPlayer1Color:
-		return &m.player1Color
-
-	case EnterPlayer2Name:
-		return &m.player2Name
-
-	case EnterPlayer2Indicator:
-		return &m.player2Indicator
-
-	case EnterPlayer2Color:
-		return &m.player2Color
-	}
-
-	return nil
 }
 
 func (m Model) View() string {
-	view := "\nGo Four options:\n\n"
+	view := "\n Go Four options:\n\n"
 
 	player1Style := lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.outputs.Player1Color))
 	player2Style := lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.outputs.Player2Color))
@@ -400,47 +212,41 @@ func (m Model) View() string {
 			cursor = ">"
 		}
 
+		box := m.inputs[b]
+
 		switch b {
 		case Back:
-			view += fmt.Sprintf(" %s %s\n\n", cursor, b)
+			view += fmt.Sprintf(" %s %s\n\n", cursor, b) // extra newline
 
-		case EnterColumns:
-			textbox := m.toTextbox(b)
-			view += fmt.Sprintf(" %s %s\n\n", cursor, textbox.View()) // extra newline
+		case EnterMaxTurns:
+			view += fmt.Sprintf(" %s %s\n\n", cursor, box.View()) // extra newline
 
 		case EnterPlayer1Name:
-			textbox := m.toTextbox(b)
-			textbox.Prompt = player1Style.Render(EnterPlayer1Name.String() + ": ")
-			view += fmt.Sprintf(" %s %s\n", cursor, textbox.View())
+			box.SetLabel(player1Style.Render(EnterPlayer1Name.String() + ": "))
+			view += fmt.Sprintf(" %s %s\n", cursor, box.View())
 
 		case EnterPlayer1Indicator:
-			textbox := m.toTextbox(b)
-			textbox.Prompt = player1Style.Render(EnterPlayer1Indicator.String() + ": ")
-			view += fmt.Sprintf(" %s %s\n", cursor, textbox.View())
+			box.SetLabel(player1Style.Render(EnterPlayer1Indicator.String() + ": "))
+			view += fmt.Sprintf(" %s %s\n", cursor, box.View())
 
 		case EnterPlayer1Color:
-			textbox := m.toTextbox(b)
-			textbox.Prompt = player1Style.Render(EnterPlayer1Color.String()+": ") + "#"
-			view += fmt.Sprintf(" %s %s\n\n", cursor, textbox.View()) // extra newline
+			box.SetLabel(player1Style.Render(EnterPlayer1Color.String()+": ") + "#")
+			view += fmt.Sprintf(" %s %s\n\n", cursor, box.View()) // extra newline
 
 		case EnterPlayer2Name:
-			textbox := m.toTextbox(b)
-			textbox.Prompt = player2Style.Render(EnterPlayer2Name.String() + ": ")
-			view += fmt.Sprintf(" %s %s\n", cursor, textbox.View())
+			box.SetLabel(player2Style.Render(EnterPlayer2Name.String() + ": "))
+			view += fmt.Sprintf(" %s %s\n", cursor, box.View())
 
 		case EnterPlayer2Indicator:
-			textbox := m.toTextbox(b)
-			textbox.Prompt = player2Style.Render(EnterPlayer2Indicator.String() + ": ")
-			view += fmt.Sprintf(" %s %s\n", cursor, textbox.View())
+			box.SetLabel(player2Style.Render(EnterPlayer2Indicator.String() + ": "))
+			view += fmt.Sprintf(" %s %s\n", cursor, box.View())
 
 		case EnterPlayer2Color:
-			textbox := m.toTextbox(b)
-			textbox.Prompt = player2Style.Render(EnterPlayer2Color.String()+": ") + "#"
-			view += fmt.Sprintf(" %s %s\n", cursor, textbox.View())
+			box.SetLabel(player2Style.Render(EnterPlayer2Color.String()+": ") + "#")
+			view += fmt.Sprintf(" %s %s\n", cursor, box.View())
 
 		default:
-			textbox := m.toTextbox(b)
-			view += fmt.Sprintf(" %s %s\n", cursor, textbox.View())
+			view += fmt.Sprintf(" %s %s\n", cursor, box.View())
 		}
 	}
 

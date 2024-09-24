@@ -15,6 +15,8 @@ func TestNewGame(t *testing.T) {
 
 	assertEqual(t, 6, game.Board().RowCount())
 	assertEqual(t, 7, game.Board().ColCount())
+	assertEqual(t, 4, game.ToWin())
+	assertEqual(t, 0, game.MaxTurns())
 }
 
 func TestNewGameSize(t *testing.T) {
@@ -22,6 +24,28 @@ func TestNewGameSize(t *testing.T) {
 
 	assertEqual(t, 2, game.Board().RowCount())
 	assertEqual(t, 3, game.Board().ColCount())
+	assertEqual(t, 4, game.ToWin())
+	assertEqual(t, 0, game.MaxTurns())
+}
+
+func TestNewGameToWin(t *testing.T) {
+	expected := c4.NewGame().ToWin() + 1
+	game := c4.NewGame(2, 3, expected)
+
+	assertEqual(t, 2, game.Board().RowCount())
+	assertEqual(t, 3, game.Board().ColCount())
+	assertEqual(t, expected, game.ToWin())
+	assertEqual(t, 0, game.MaxTurns())
+}
+
+func TestNewGameMaxTurns(t *testing.T) {
+	expected := c4.NewGame().MaxTurns() + 1
+	game := c4.NewGame(2, 3, 4, expected)
+
+	assertEqual(t, 2, game.Board().RowCount())
+	assertEqual(t, 3, game.Board().ColCount())
+	assertEqual(t, 4, game.ToWin())
+	assertEqual(t, expected, game.MaxTurns())
 }
 
 func TestGameStart(t *testing.T) {
@@ -384,4 +408,97 @@ func TestGameStartResetsGame(t *testing.T) {
 	assertEqual(t, empty.Turn(), game.Turn())
 	assertEqual(t, empty.TurnCount(), game.TurnCount())
 	assertEqual(t, true, empty.Board().IsEqual(game.Board()))
+}
+
+func TestFullGamePlayerOneWins5InARow(t *testing.T) {
+	game := c4.NewGame(6, 7, 5)
+	game.Start()
+	game.PlayTurn(0)
+	game.PlayTurn(0)
+	game.PlayTurn(1)
+	game.PlayTurn(1)
+	game.PlayTurn(2)
+	game.PlayTurn(2)
+	game.PlayTurn(3)
+	game.PlayTurn(3)
+
+	/*
+	     0 1 2 3 4 5 6     0 1 2 3 4 5 6
+	   0 - - - - - - -   0 - - - - - - -
+	   1 - - - - - - -   1 - - - - - - -
+	   2 - - - - - - -   2 - - - - - - -
+	   3 - - - - - - -   3 - - - - - - -
+	   4 B B B B - - -   4 B B B B - - -
+	   5 A A A A - - -   5 A A A A A - -
+	*/
+
+	assertEqual(t, c4.One, game.Board().Get(5, 0))
+	assertEqual(t, c4.Two, game.Board().Get(4, 0))
+	assertEqual(t, c4.One, game.Board().Get(5, 1))
+	assertEqual(t, c4.Two, game.Board().Get(4, 1))
+	assertEqual(t, c4.One, game.Board().Get(5, 2))
+	assertEqual(t, c4.Two, game.Board().Get(4, 2))
+	assertEqual(t, c4.One, game.Board().Get(5, 3))
+	assertEqual(t, c4.Two, game.Board().Get(4, 3))
+
+	assertEqual(t, c4.Running, game.Status())
+	assertEqual(t, c4.One, game.Turn())
+	assertEqual(t, 8, game.TurnCount())
+
+	game.PlayTurn(4)
+
+	assertEqual(t, c4.One, game.Board().Get(5, 4))
+
+	assertEqual(t, c4.Completed, game.Status())
+	assertEqual(t, c4.One, game.Turn())
+	assertEqual(t, 9, game.TurnCount())
+}
+
+func TestGameMaxTurnDraw1(t *testing.T) {
+	game := c4.NewGame(6, 7, 4, 1)
+	game.Start()
+
+	assertEqual(t, c4.Running, game.Status())
+	assertEqual(t, c4.One, game.Turn())
+	assertEqual(t, 0, game.TurnCount())
+
+	game.PlayTurn(0)
+
+	assertEqual(t, c4.Draw, game.Status())
+	assertEqual(t, c4.None, game.Turn())
+	assertEqual(t, 1, game.TurnCount())
+}
+
+func TestGameMaxTurnDraw3(t *testing.T) {
+	game := c4.NewGame(6, 7, 2, 3)
+	game.Start()
+	game.PlayTurn(0)
+	game.PlayTurn(1)
+
+	assertEqual(t, c4.Running, game.Status())
+	assertEqual(t, c4.One, game.Turn())
+	assertEqual(t, 2, game.TurnCount())
+
+	game.PlayTurn(2)
+
+	assertEqual(t, c4.Draw, game.Status())
+	assertEqual(t, c4.None, game.Turn())
+	assertEqual(t, 3, game.TurnCount())
+}
+
+func TestGameWinMaxTurn3(t *testing.T) {
+	game := c4.NewGame(6, 7, 2, 3)
+	game.Start()
+	game.PlayTurn(0)
+	game.PlayTurn(1)
+
+	assertEqual(t, c4.Running, game.Status())
+	assertEqual(t, c4.One, game.Turn())
+	assertEqual(t, 2, game.TurnCount())
+
+	game.PlayTurn(1)
+
+	assertEqual(t, c4.Completed, game.Status())
+	assertEqual(t, c4.One, game.Turn())
+	assertEqual(t, 3, game.TurnCount())
 }
