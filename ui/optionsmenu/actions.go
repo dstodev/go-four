@@ -34,7 +34,7 @@ func (b action) String() string {
 	}[b]
 }
 
-func (b action) opposite() action {
+func (b action) Opposite() action {
 	switch b {
 	case EnterPlayer1Name:
 		return EnterPlayer2Name
