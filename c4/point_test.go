@@ -15,6 +15,15 @@ func TestPointDestructure(t *testing.T) {
 	assertEqual(t, 2, c)
 }
 
+func TestPointAdd(t *testing.T) {
+	point := c4.Point{1, 2}
+	other := c4.Point{3, -4}
+
+	result := point.Add(other)
+
+	assertEqual(t, c4.Point{4, -2}, result)
+}
+
 func TestPointStep(t *testing.T) {
 	point := c4.Point{0, 0}
 

@@ -211,7 +211,7 @@ func (m Model) View() string {
 
 			switch c {
 			case c4.None:
-				view += c.Short().String()
+				view += " "
 			case c4.One:
 				view += player1Style.Render(m.options.Player1Indicator)
 			case c4.Two:

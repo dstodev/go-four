@@ -49,3 +49,14 @@ func TestDirectionOffsetColumn(t *testing.T) {
 	assertEqual(t, -1, c4.West.OffsetColumn())
 	assertEqual(t, -1, c4.NorthWest.OffsetColumn())
 }
+
+func TestDirectionOffset(t *testing.T) {
+	assertEqual(t, c4.Point{-1, 0}, c4.North.Offset())
+	assertEqual(t, c4.Point{-1, 1}, c4.NorthEast.Offset())
+	assertEqual(t, c4.Point{0, 1}, c4.East.Offset())
+	assertEqual(t, c4.Point{1, 1}, c4.SouthEast.Offset())
+	assertEqual(t, c4.Point{1, 0}, c4.South.Offset())
+	assertEqual(t, c4.Point{1, -1}, c4.SouthWest.Offset())
+	assertEqual(t, c4.Point{0, -1}, c4.West.Offset())
+	assertEqual(t, c4.Point{-1, -1}, c4.NorthWest.Offset())
+}

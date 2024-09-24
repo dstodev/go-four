@@ -116,10 +116,10 @@ func TestBoardCountDirection(t *testing.T) {
 
 	/*
 	     0 1 2 3 4
-	   0 - - R - R
-	   1 - - R R -
-	   2 - R R B R  <-- Test focuses on the center R at (2,2)
-	   3 - R R B -
+	   0 - - A - A
+	   1 - - A A -
+	   2 - A A B A  <-- Test focuses on the center R at (2,2)
+	   3 - A A B -
 	   4 - - - - -  <-- and at the bottom-left (4,0)
 	*/
 
@@ -157,10 +157,10 @@ func TestBoardCountBidirection(t *testing.T) {
 
 	/*
 	     0 1 2 3 4
-	   0 - - R - R
-	   1 - - R R -
-	   2 - R R B R  <-- Test focuses on the center R at (2,2)
-	   3 - R R B -
+	   0 - - A - A
+	   1 - - A A -
+	   2 - A A B A  <-- Test focuses on the center R at (2,2)
+	   3 - A A B -
 	   4 - - - - -  <-- and at the bottom-left (4,0)
 	*/
 
@@ -174,10 +174,12 @@ func TestBoardCountBidirection(t *testing.T) {
 	assertEqual(t, 1, b.CountBidirection(2, 2, c4.NorthWest))
 
 	// At the empty bottom-left, facing top-right
+	// Counts player 0 ("None") as well, hence 1 where there is no player
 	assertEqual(t, 1, b.CountBidirection(4, 0, c4.NorthEast))
 
 	// Out of bounds
-	assertEqual(t, 0, b.CountBidirection(-1, 0, c4.North))
+	assertEqual(t, 0, b.CountBidirection(-1, 2, c4.North))
+	assertEqual(t, 0, b.CountBidirection(2, 5, c4.West))
 }
 
 func TestBoardRows(t *testing.T) {

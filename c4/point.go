@@ -10,5 +10,9 @@ func (p Point) Get() (int, int) {
 }
 
 func (p Point) Step(direction Direction) Point {
-	return Point{p.Row + direction.OffsetRow(), p.Col + direction.OffsetColumn()}
+	return p.Add(direction.Offset())
+}
+
+func (p Point) Add(other Point) Point {
+	return Point{p.Row + other.Row, p.Col + other.Col}
 }

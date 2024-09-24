@@ -64,3 +64,7 @@ func (direction Direction) OffsetColumn() int {
 		-1,
 	}[direction]
 }
+
+func (direction Direction) Offset() Point {
+	return Point{direction.OffsetRow(), direction.OffsetColumn()}
+}
