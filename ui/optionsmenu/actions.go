@@ -7,6 +7,8 @@ const (
 
 	EnterRows
 	EnterColumns
+	EnterToWin
+	EnterMaxTurns
 
 	EnterPlayer1Name
 	EnterPlayer1Indicator
@@ -23,6 +25,8 @@ func (b action) String() string {
 
 		"Rows",
 		"Columns",
+		"To Win",
+		"Max Turns",
 
 		"Player 1 name",
 		"Player 1 indicator",

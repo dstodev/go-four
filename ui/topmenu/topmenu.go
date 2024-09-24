@@ -168,7 +168,7 @@ func (m Model) View() string {
 }
 
 func (m Model) internalView() string {
-	view := "\nGo Four!\n\n"
+	view := "\n Go Four!\n\n"
 
 	for _, b := range m.buttons {
 		cursor := " "

@@ -16,8 +16,10 @@ import (
 type Outputs struct {
 	Back bool
 
-	Rows    int
-	Columns int
+	Rows     int
+	Columns  int
+	ToWin    int
+	MaxTurns int
 
 	Player1Name      string
 	Player1Indicator string
@@ -47,8 +49,10 @@ func New(outputs *Outputs) Model {
 	*outputs = Outputs{
 		Back: false,
 
-		Rows:    6,
-		Columns: 7,
+		Rows:     6,
+		Columns:  7,
+		ToWin:    4,
+		MaxTurns: 0,
 
 		Player1Name:      "Player One",
 		Player1Indicator: "A",
@@ -63,8 +67,10 @@ func New(outputs *Outputs) Model {
 	help.ShowAll = true
 
 	inputs := map[action]tb.Model{
-		EnterRows:    tb.NewInteger(&outputs.Rows, 1).WithLabel("   " + EnterRows.String() + " (1-9): "),
-		EnterColumns: tb.NewInteger(&outputs.Columns, 1).WithLabel(EnterColumns.String() + " (1-9): "),
+		EnterRows:     tb.NewInteger(&outputs.Rows, 1, tb.ConstrainGreaterEq(4)).WithLabel(EnterRows.String() + "    (4-9): "),
+		EnterColumns:  tb.NewInteger(&outputs.Columns, 1, tb.ConstrainGreaterEq(4)).WithLabel(EnterColumns.String() + " (4-9): "),
+		EnterToWin:    tb.NewInteger(&outputs.ToWin, 1, tb.ConstrainGreaterEq(3)).WithLabel(EnterToWin.String() + "  (3-9): "),
+		EnterMaxTurns: tb.NewInteger(&outputs.MaxTurns, 3, tb.ConstrainGreaterEqZero, tb.ConstrainLessEq(100)).WithLabel(EnterMaxTurns.String() + " (0-100): "),
 
 		EnterPlayer1Name:      tb.NewString(&outputs.Player1Name, 10),
 		EnterPlayer1Indicator: tb.NewString(&outputs.Player1Indicator, 1),
@@ -90,7 +96,7 @@ func New(outputs *Outputs) Model {
 		outputs: outputs,
 
 		cursor: 0,
-		height: 18,
+		height: 20,
 
 		buttons: buttons,
 
@@ -108,6 +114,8 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	forwardMsg := true
+
+	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -149,7 +157,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					forwardMsg = false
 
 					m.constrainKeymap()
-					box.Enter()
+					cmd = box.Enter()
 				} else {
 					m.currentTextbox = -1
 
@@ -168,8 +176,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-
-	var cmd tea.Cmd
 
 	if forwardMsg && m.currentTextbox != -1 {
 		box := m.inputs[m.currentTextbox]
@@ -194,7 +200,7 @@ func (m *Model) resetKeymap() {
 }
 
 func (m Model) View() string {
-	view := "\nGo Four options:\n\n"
+	view := "\n Go Four options:\n\n"
 
 	player1Style := lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.outputs.Player1Color))
 	player2Style := lipgloss.NewStyle().Foreground(lipgloss.Color("#" + m.outputs.Player2Color))
@@ -212,7 +218,7 @@ func (m Model) View() string {
 		case Back:
 			view += fmt.Sprintf(" %s %s\n\n", cursor, b) // extra newline
 
-		case EnterColumns:
+		case EnterMaxTurns:
 			view += fmt.Sprintf(" %s %s\n\n", cursor, box.View()) // extra newline
 
 		case EnterPlayer1Name:

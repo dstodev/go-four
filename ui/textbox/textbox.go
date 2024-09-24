@@ -1,7 +1,6 @@
 package textbox
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -9,19 +8,14 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type boxStrategy interface {
-	isValid(m Model) bool
-	updateOutput(m Model)
-}
-
 type Model struct {
-	input    textinput.Model
-	strategy boxStrategy
+	input       textinput.Model
+	update      func(m Model)
+	constraints []Constraint
 }
 
 func (m Model) Init() tea.Cmd {
-	//return textinput.Blink
-	return nil
+	return textinput.Blink
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -34,89 +28,59 @@ func (m Model) View() string {
 	return m.input.View()
 }
 
-func NewInteger(output *int, width int) Model {
+func NewInteger(output *int, width int, constraints ...Constraint) Model {
 	input := textinput.New()
 	input.Placeholder = strconv.Itoa(*output)
 	input.CharLimit = width
 	input.Width = width
 
 	return Model{
-		input:    input,
-		strategy: integerStrategy{output},
+		input: input,
+		update: func(m Model) {
+			if m.isValid() {
+				box := &m.input
+				*output, _ = strconv.Atoi(valueOrPlaceholder(box))
+			}
+		},
+		constraints: constraints,
 	}
 }
 
-type integerStrategy struct {
-	output *int
-}
-
-func (b integerStrategy) isValid(m Model) bool {
-	box := &m.input
-	value, err := strconv.Atoi(valueOrPlaceholder(box))
-	return err == nil && value > 0
-}
-
-func (b integerStrategy) updateOutput(m Model) {
-	if b.isValid(m) {
-		box := &m.input
-		*b.output, _ = strconv.Atoi(valueOrPlaceholder(box))
-	}
-}
-
-func NewString(output *string, width int) Model {
+func NewString(output *string, width int, constraints ...Constraint) Model {
 	input := textinput.New()
 	input.Placeholder = *output
 	input.CharLimit = width
 	input.Width = width
 
 	return Model{
-		input:    input,
-		strategy: stringStrategy{output},
+		input: input,
+		update: func(m Model) {
+			if m.isValid() {
+				box := &m.input
+				*output = valueOrPlaceholder(box)
+			}
+		},
+		constraints: constraints,
 	}
 }
 
-type stringStrategy struct {
-	output *string
-}
-
-func (b stringStrategy) isValid(m Model) bool {
-	return true
-}
-
-func (b stringStrategy) updateOutput(m Model) {
-	if b.isValid(m) {
-		box := &m.input
-		*b.output = valueOrPlaceholder(box)
-	}
-}
-
-func NewColor(output *string) Model {
+func NewColor(output *string, constraints ...Constraint) Model {
 	input := textinput.New()
 	input.Placeholder = *output
 	input.CharLimit = 6
 	input.Width = 6
 
+	constraints = append(constraints, ConstrainHexColor)
+
 	return Model{
-		input:    input,
-		strategy: colorBox{output},
-	}
-}
-
-type colorBox struct {
-	output *string
-}
-
-func (b colorBox) isValid(m Model) bool {
-	box := &m.input
-	value := valueOrPlaceholder(box)
-	pattern := regexp.MustCompile("[0-9a-fA-F]{6}")
-	return pattern.MatchString(value)
-}
-
-func (b colorBox) updateOutput(m Model) {
-	if b.isValid(m) {
-		box := &m.input
-		*b.output = valueOrPlaceholder(box)
+		input: input,
+		update: func(m Model) {
+			if m.isValid() {
+				box := &m.input
+				*output = valueOrPlaceholder(box)
+			}
+		},
+		constraints: constraints,
 	}
 }
 
@@ -129,12 +93,14 @@ func (m *Model) SetLabel(label string) {
 	m.input.Prompt = label
 }
 
-func (m *Model) Enter() {
+func (m *Model) Enter() tea.Cmd {
 	box := &m.input
 
 	box.Reset()
-	box.Focus()
+	cmd := box.Focus()
 	box.CursorEnd()
+
+	return cmd
 }
 
 func (m *Model) Leave(assertDifferent *Model) {
@@ -166,11 +132,16 @@ func (m *Model) Leave(assertDifferent *Model) {
 }
 
 func (m *Model) isValid() bool {
-	return m.strategy.isValid(*m)
+	for _, constraint := range m.constraints {
+		if !constraint(*m) {
+			return false
+		}
+	}
+	return true
 }
 
 func (m *Model) updateOutput() {
-	m.strategy.updateOutput(*m)
+	m.update(*m)
 }
 
 func (m *Model) Value() string {
