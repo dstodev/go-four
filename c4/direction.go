@@ -2,8 +2,21 @@ package c4
 
 type Direction int
 
+const (
+	NoDirection Direction = iota
+	North
+	NorthEast
+	East
+	SouthEast
+	South
+	SouthWest
+	West
+	NorthWest
+)
+
 func (status Direction) String() string {
 	return [...]string{
+		"None",
 		"North",
 		"NorthEast",
 		"East",
@@ -15,19 +28,9 @@ func (status Direction) String() string {
 	}[status]
 }
 
-const (
-	North Direction = iota
-	NorthEast
-	East
-	SouthEast
-	South
-	SouthWest
-	West
-	NorthWest
-)
-
 func (direction Direction) Negate() Direction {
 	return [...]Direction{
+		NoDirection,
 		South,
 		SouthWest,
 		West,
@@ -41,6 +44,7 @@ func (direction Direction) Negate() Direction {
 
 func (direction Direction) OffsetRow() int {
 	return [...]int{
+		0,
 		-1,
 		-1,
 		0,
@@ -54,6 +58,7 @@ func (direction Direction) OffsetRow() int {
 
 func (direction Direction) OffsetColumn() int {
 	return [...]int{
+		0,
 		0,
 		1,
 		1,

@@ -31,7 +31,7 @@ func (b Board) ColCount() int {
 func (b Board) Get(row, column int) Player {
 	player := None
 
-	if b.inBounds(row, column) {
+	if b.InBounds(row, column) {
 		player = b.data[row][column]
 	}
 
@@ -39,7 +39,7 @@ func (b Board) Get(row, column int) Player {
 }
 
 func (b *Board) Set(row, column int, player Player) *Board {
-	if b.inBounds(row, column) {
+	if b.InBounds(row, column) {
 		b.data[row][column] = player
 	}
 	return b
@@ -49,7 +49,7 @@ func (b Board) Rows() [][]Player {
 	return b.data
 }
 
-func (b Board) inBounds(row, column int) bool {
+func (b Board) InBounds(row, column int) bool {
 	return row >= 0 && row < b.rows && column >= 0 && column < b.columns
 }
 
@@ -93,7 +93,7 @@ func (b Board) CountDirection(row, column int, direction Direction) int {
 
 	player := b.Get(point.Get())
 
-	for ; b.inBounds(point.Get()); point = point.Step(direction) {
+	for ; b.InBounds(point.Get()); point = point.Step(direction) {
 		if b.Get(point.Get()) == player {
 			count += 1
 		} else {
@@ -107,7 +107,7 @@ func (b Board) CountDirection(row, column int, direction Direction) int {
 func (b Board) CountBidirection(row, column int, direction Direction) int {
 	count := 0
 
-	if b.inBounds(row, column) {
+	if b.InBounds(row, column) {
 		count += b.CountDirection(row, column, direction)
 		count += b.CountDirection(row, column, direction.Negate())
 		count -= 1

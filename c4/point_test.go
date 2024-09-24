@@ -6,6 +6,13 @@ import (
 	"github.com/dstodev/go-four/c4"
 )
 
+func TestNewPoint(t *testing.T) {
+	point := c4.NewPoint(1, 2)
+
+	assertEqual(t, 1, point.Row)
+	assertEqual(t, 2, point.Col)
+}
+
 func TestPointDestructure(t *testing.T) {
 	point := c4.Point{1, 2}
 

@@ -73,7 +73,7 @@ func (game *Game) PlayTurn(column int) {
 		return
 	}
 
-	if !game.board.inBounds(0, column) {
+	if !game.board.InBounds(0, column) {
 		return
 	}
 

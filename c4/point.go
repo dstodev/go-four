@@ -5,6 +5,10 @@ type Point struct {
 	Col int
 }
 
+func NewPoint(row, col int) Point {
+	return Point{row, col}
+}
+
 func (p Point) Get() (int, int) {
 	return p.Row, p.Col
 }

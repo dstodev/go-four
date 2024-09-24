@@ -165,9 +165,14 @@ func (m Model) View() string {
 
 	playerName = playerStyle.Render(playerName)
 
+	board := m.game.Board()
+
 	view += " "
 
-	if m.game.Status() == c4.Running {
+	var partOfWin [][]bool
+
+	switch m.game.Status() {
+	case c4.Running:
 		var maxTurns string
 
 		if m.game.MaxTurns() > 0 {
@@ -175,9 +180,35 @@ func (m Model) View() string {
 		}
 
 		view += fmt.Sprintf("Turn: %s (#%d%s)", playerName, m.game.TurnCount(), maxTurns)
-	} else if m.game.Status() == c4.Completed {
+
+	case c4.Completed:
 		view += fmt.Sprintf("Game over! %s wins! (Turn #%d)", playerName, m.game.TurnCount())
-	} else {
+
+		// Get last placed token
+		winPoint := c4.NewPoint(0, m.column)
+
+		for ; winPoint.Row < board.RowCount(); winPoint = winPoint.Step(c4.South) {
+			if board.Get(winPoint.Get()) == m.game.Turn() {
+				break
+			}
+		}
+
+		// Get winning chain(s)
+		partOfWin = make([][]bool, board.RowCount())
+
+		for i := range partOfWin {
+			partOfWin[i] = make([]bool, board.ColCount())
+		}
+
+		for direction := c4.North; direction < c4.NorthWest; direction++ {
+			if board.CountBidirection(winPoint.Row, winPoint.Col, direction) >= m.game.ToWin() {
+				for crawl := winPoint; board.Get(crawl.Get()) == m.game.Turn(); crawl = crawl.Step(direction) {
+					partOfWin[crawl.Row][crawl.Col] = true
+				}
+			}
+		}
+
+	default:
 		view += fmt.Sprintf("Draw on turn %d!", m.game.TurnCount())
 	}
 
@@ -189,16 +220,16 @@ func (m Model) View() string {
 	view += " " + strings.Repeat("    ", m.column)
 	view += boardLeftPad + " " + playerStyle.Render("↓") + " \n"
 
-	for i, r := range m.game.Board().Rows() {
+	for i, r := range board.Rows() {
 		view += boardLeftPad + "┤"
 
 		for j, c := range r {
-			aboveToken := m.game.Board().Get(i, j) == c4.None &&
-				m.game.Board().Get(i+1, j) != c4.None &&
+			aboveToken := board.Get(i, j) == c4.None &&
+				board.Neighbor(i, j, c4.South) != c4.None &&
 				j == m.column
 
-			bottomRowColumn := i == m.game.Board().RowCount()-1 &&
-				m.game.Board().Get(i, j) == c4.None &&
+			bottomRowColumn := i == board.RowCount()-1 &&
+				board.Get(i, j) == c4.None &&
 				j == m.column
 
 			placementIndicator := (aboveToken || bottomRowColumn) && m.game.Status() == c4.Running
@@ -209,9 +240,18 @@ func (m Model) View() string {
 				view += " "
 			}
 
+			if len(partOfWin) > 0 && partOfWin[i][j] {
+				player1Style = player1Style.Bold(true).Underline(true)
+				player2Style = player2Style.Bold(true).Underline(true)
+			} else {
+				player1Style = player1Style.Bold(false).Underline(false)
+				player2Style = player2Style.Bold(false).Underline(false)
+			}
+
 			switch c {
 			case c4.None:
 				view += " "
+			// Must render using fixed styles here to preserve players' already-placed token colors
 			case c4.One:
 				view += player1Style.Render(m.options.Player1Indicator)
 			case c4.Two:
@@ -224,20 +264,20 @@ func (m Model) View() string {
 				view += " "
 			}
 
-			if j < m.game.Board().ColCount()-1 {
+			if j < board.ColCount()-1 {
 				view += "│"
 			} else {
 				view += "├"
 			}
 		}
 
-		if i < m.game.Board().RowCount()-1 {
-			view += "\n" + boardLeftPad + "├" + strings.Repeat("───┼", m.game.Board().ColCount()-1) + "───┤"
+		if i < board.RowCount()-1 {
+			view += "\n" + boardLeftPad + "├" + strings.Repeat("───┼", board.ColCount()-1) + "───┤"
 		}
 
 		view += "\n"
 	}
-	view += boardLeftPad + "├" + strings.Repeat("───┴", m.game.Board().ColCount()-1) + "───┤\n"
+	view += boardLeftPad + "├" + strings.Repeat("───┴", board.ColCount()-1) + "───┤\n"
 
 	view += "\n"
 

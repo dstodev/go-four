@@ -14,6 +14,20 @@ func TestNewBoard(t *testing.T) {
 	assertEqual(t, c4.None, b.Get(0, 0))
 }
 
+func TestBoardInBounds(t *testing.T) {
+	b := c4.NewBoard(1, 1)
+
+	assertEqual(t, true, b.InBounds(0, 0))
+	assertEqual(t, false, b.InBounds(-1, 1))
+	assertEqual(t, false, b.InBounds(-1, 0))
+	assertEqual(t, false, b.InBounds(-1, 1))
+	assertEqual(t, false, b.InBounds(0, -1))
+	assertEqual(t, false, b.InBounds(0, 1))
+	assertEqual(t, false, b.InBounds(1, -1))
+	assertEqual(t, false, b.InBounds(1, 0))
+	assertEqual(t, false, b.InBounds(1, 1))
+}
+
 func TestBoardIndexing(t *testing.T) {
 	b := c4.NewBoard(1, 1)
 
@@ -85,6 +99,7 @@ func TestBoardNeighbor(t *testing.T) {
 		Set(2, 2, 8)
 
 	// Test all directions centered on 4
+	assertEqual(t, 4, b.Neighbor(1, 1, c4.NoDirection))
 	assertEqual(t, 1, b.Neighbor(1, 1, c4.North))
 	assertEqual(t, 2, b.Neighbor(1, 1, c4.NorthEast))
 	assertEqual(t, 5, b.Neighbor(1, 1, c4.East))

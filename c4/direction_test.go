@@ -7,6 +7,7 @@ import (
 )
 
 func TestDirectionString(t *testing.T) {
+	assertEqual(t, "None", c4.NoDirection.String())
 	assertEqual(t, "North", c4.North.String())
 	assertEqual(t, "NorthEast", c4.NorthEast.String())
 	assertEqual(t, "East", c4.East.String())
@@ -17,7 +18,13 @@ func TestDirectionString(t *testing.T) {
 	assertEqual(t, "NorthWest", c4.NorthWest.String())
 }
 
+func TestDirectionDefault(t *testing.T) {
+	var d c4.Direction
+	assertEqual(t, c4.NoDirection, d)
+}
+
 func TestDirectionNegate(t *testing.T) {
+	assertEqual(t, c4.NoDirection, c4.NoDirection.Negate())
 	assertEqual(t, c4.South, c4.North.Negate())
 	assertEqual(t, c4.SouthWest, c4.NorthEast.Negate())
 	assertEqual(t, c4.West, c4.East.Negate())
@@ -29,6 +36,7 @@ func TestDirectionNegate(t *testing.T) {
 }
 
 func TestDirectionOffsetRow(t *testing.T) {
+	assertEqual(t, 0, c4.NoDirection.OffsetRow())
 	assertEqual(t, -1, c4.North.OffsetRow())
 	assertEqual(t, -1, c4.NorthEast.OffsetRow())
 	assertEqual(t, 0, c4.East.OffsetRow())
@@ -40,6 +48,7 @@ func TestDirectionOffsetRow(t *testing.T) {
 }
 
 func TestDirectionOffsetColumn(t *testing.T) {
+	assertEqual(t, 0, c4.NoDirection.OffsetColumn())
 	assertEqual(t, 0, c4.North.OffsetColumn())
 	assertEqual(t, 1, c4.NorthEast.OffsetColumn())
 	assertEqual(t, 1, c4.East.OffsetColumn())
@@ -51,6 +60,7 @@ func TestDirectionOffsetColumn(t *testing.T) {
 }
 
 func TestDirectionOffset(t *testing.T) {
+	assertEqual(t, c4.Point{0, 0}, c4.NoDirection.Offset())
 	assertEqual(t, c4.Point{-1, 0}, c4.North.Offset())
 	assertEqual(t, c4.Point{-1, 1}, c4.NorthEast.Offset())
 	assertEqual(t, c4.Point{0, 1}, c4.East.Offset())
