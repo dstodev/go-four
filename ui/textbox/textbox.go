@@ -9,10 +9,14 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type boxStrategy interface {
+	isValid(m Model) bool
+	updateOutput(m Model)
+}
+
 type Model struct {
-	input        textinput.Model
-	isValid      func(m Model) bool
-	updateOutput func(m Model)
+	input    textinput.Model
+	strategy boxStrategy
 }
 
 func (m Model) Init() tea.Cmd {
@@ -37,18 +41,25 @@ func NewInteger(output *int, width int) Model {
 	input.Width = width
 
 	return Model{
-		input: input,
-		isValid: func(m Model) bool {
-			box := &m.input
-			value, err := strconv.Atoi(valueOrPlaceholder(box))
-			return err == nil && value > 0
-		},
-		updateOutput: func(m Model) {
-			if m.isValid(m) {
-				box := &m.input
-				*output, _ = strconv.Atoi(valueOrPlaceholder(box))
-			}
-		},
+		input:    input,
+		strategy: integerStrategy{output},
+	}
+}
+
+type integerStrategy struct {
+	output *int
+}
+
+func (b integerStrategy) isValid(m Model) bool {
+	box := &m.input
+	value, err := strconv.Atoi(valueOrPlaceholder(box))
+	return err == nil && value > 0
+}
+
+func (b integerStrategy) updateOutput(m Model) {
+	if b.isValid(m) {
+		box := &m.input
+		*b.output, _ = strconv.Atoi(valueOrPlaceholder(box))
 	}
 }
 
@@ -59,16 +70,23 @@ func NewString(output *string, width int) Model {
 	input.Width = width
 
 	return Model{
-		input: input,
-		isValid: func(m Model) bool {
-			return true
-		},
-		updateOutput: func(m Model) {
-			if m.isValid(m) {
-				box := &m.input
-				*output = valueOrPlaceholder(box)
-			}
-		},
+		input:    input,
+		strategy: stringStrategy{output},
+	}
+}
+
+type stringStrategy struct {
+	output *string
+}
+
+func (b stringStrategy) isValid(m Model) bool {
+	return true
+}
+
+func (b stringStrategy) updateOutput(m Model) {
+	if b.isValid(m) {
+		box := &m.input
+		*b.output = valueOrPlaceholder(box)
 	}
 }
 
@@ -79,19 +97,26 @@ func NewColor(output *string) Model {
 	input.Width = 6
 
 	return Model{
-		input: input,
-		isValid: func(m Model) bool {
-			box := &m.input
-			value := valueOrPlaceholder(box)
-			pattern := regexp.MustCompile("[0-9a-fA-F]{6}")
-			return pattern.MatchString(value)
-		},
-		updateOutput: func(m Model) {
-			if m.isValid(m) {
-				box := &m.input
-				*output = valueOrPlaceholder(box)
-			}
-		},
+		input:    input,
+		strategy: colorBox{output},
+	}
+}
+
+type colorBox struct {
+	output *string
+}
+
+func (b colorBox) isValid(m Model) bool {
+	box := &m.input
+	value := valueOrPlaceholder(box)
+	pattern := regexp.MustCompile("[0-9a-fA-F]{6}")
+	return pattern.MatchString(value)
+}
+
+func (b colorBox) updateOutput(m Model) {
+	if b.isValid(m) {
+		box := &m.input
+		*b.output = valueOrPlaceholder(box)
 	}
 }
 
@@ -116,7 +141,7 @@ func (m *Model) Leave(assertDifferent *Model) {
 	box := &m.input
 	box.Blur()
 
-	if !m.isValid(*m) {
+	if !m.isValid() {
 		box.Reset()
 	}
 
@@ -137,7 +162,15 @@ func (m *Model) Leave(assertDifferent *Model) {
 		}
 	}
 
-	m.updateOutput(*m)
+	m.updateOutput()
+}
+
+func (m *Model) isValid() bool {
+	return m.strategy.isValid(*m)
+}
+
+func (m *Model) updateOutput() {
+	m.strategy.updateOutput(*m)
 }
 
 func (m *Model) Value() string {
