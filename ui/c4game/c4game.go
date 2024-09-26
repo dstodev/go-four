@@ -96,10 +96,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case key.Matches(msg, m.keys.Back):
-			cmd = func() tea.Msg { return ui.BackMsg{} }
+			cmd = ui.BackCmd
 
 		case key.Matches(msg, m.keys.Help):
-			cmd = func() tea.Msg { return ui.SetFullHelpMsg(!m.help.ShowAll) }
+			cmd = ui.SetFullHelpCmd(!m.help.ShowAll)
 
 		case key.Matches(msg, m.keys.Up):
 			if m.cursor > 0 {
@@ -131,7 +131,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 			case Back:
-				cmd = func() tea.Msg { return ui.BackMsg{} }
+				cmd = ui.BackCmd
 
 			case Quit:
 				return m, tea.Quit

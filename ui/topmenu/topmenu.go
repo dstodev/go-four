@@ -144,7 +144,7 @@ func (m *Model) internalUpdate(msg tea.Msg) tea.Cmd {
 			return tea.Quit
 
 		case key.Matches(msg, m.keys.Help):
-			cmd = func() tea.Msg { return ui.SetFullHelpMsg(!m.help.ShowAll) }
+			cmd = ui.SetFullHelpCmd(!m.help.ShowAll)
 
 		case key.Matches(msg, m.keys.Up):
 			if m.cursor > 0 {
@@ -160,14 +160,14 @@ func (m *Model) internalUpdate(msg tea.Msg) tea.Cmd {
 			switch m.buttons[m.cursor] {
 			case buttonNewGame:
 				m.game = c4game.New(*m.optionsOut, m.maxHeight)
-				cmd = func() tea.Msg { return ui.SetFullHelpMsg(m.help.ShowAll) }
+				cmd = ui.SetFullHelpCmd(m.help.ShowAll)
 				m.currentMenu = menuGame
 
 			case buttonOptions:
 				m.currentMenu = menuOptions
 
 			case buttonHelp:
-				cmd = func() tea.Msg { return ui.SetFullHelpMsg(!m.help.ShowAll) }
+				cmd = ui.SetFullHelpCmd(!m.help.ShowAll)
 
 			case buttonQuit:
 				return tea.Quit
