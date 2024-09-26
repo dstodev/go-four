@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dstodev/go-four/c4"
+
 	"github.com/dstodev/go-four/ui/topmenu"
 )
 

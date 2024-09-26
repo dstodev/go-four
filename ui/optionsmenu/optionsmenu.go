@@ -58,7 +58,7 @@ func New(outputs *Outputs, height int) Model {
 
 		Player2Name:      "Player Two",
 		Player2Indicator: "B",
-		Player2Color:     "ff7f00",
+		Player2Color:     "ff9400",
 	}
 
 	help := help.New()
@@ -70,11 +70,11 @@ func New(outputs *Outputs, height int) Model {
 		EnterToWin:    tb.NewInteger(&outputs.ToWin, 1, tb.ConstrainGreaterEq(3)).WithLabel(EnterToWin.String() + "  (3-9): "),
 		EnterMaxTurns: tb.NewInteger(&outputs.MaxTurns, 3, tb.ConstrainGreaterEqZero, tb.ConstrainLessEq(100)).WithLabel(EnterMaxTurns.String() + " (0-100): "),
 
-		EnterPlayer1Name:      tb.NewString(&outputs.Player1Name, 10),
+		EnterPlayer1Name:      tb.NewString(&outputs.Player1Name, 20),
 		EnterPlayer1Indicator: tb.NewString(&outputs.Player1Indicator, 1),
 		EnterPlayer1Color:     tb.NewColor(&outputs.Player1Color),
 
-		EnterPlayer2Name:      tb.NewString(&outputs.Player2Name, 10),
+		EnterPlayer2Name:      tb.NewString(&outputs.Player2Name, 20),
 		EnterPlayer2Indicator: tb.NewString(&outputs.Player2Indicator, 1),
 		EnterPlayer2Color:     tb.NewColor(&outputs.Player2Color),
 	}
