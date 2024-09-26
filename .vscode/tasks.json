@@ -1,0 +1,36 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "go",
+			"label": "go: test workspace",
+			"command": "test",
+			"args": [
+				"./...",
+			],
+			"problemMatcher": [
+				"$go",
+			],
+			"group": "test",
+			"detail": "go test ./...",
+		},
+		{
+			"type": "go",
+			"label": "go: build workspace",
+			"command": "build",
+			"args": [
+				"-ldflags", "-s -w",
+				"-o", "${workspaceFolder}/",
+				"./...",
+			],
+			"options": {
+				"cwd": "${workspaceFolder}",
+			},
+			"problemMatcher": [
+				"$go",
+			],
+			"group": "build",
+			"detail": "go build ./...",
+		},
+	],
+}
