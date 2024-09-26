@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/dstodev/go-four/ui"
 	"github.com/dstodev/go-four/ui/c4game"
 	"github.com/dstodev/go-four/ui/optionsmenu"
 	"github.com/dstodev/go-four/util"
@@ -38,8 +39,6 @@ const (
 	menuOptions
 )
 
-type SetFullHelpMsg bool
-
 type Model struct {
 	cursor      int
 	currentMenu menu
@@ -48,8 +47,7 @@ type Model struct {
 
 	maxHeight int
 
-	game    tea.Model
-	gameOut *c4game.Outputs
+	game tea.Model
 
 	options    tea.Model
 	optionsOut *optionsmenu.Outputs
@@ -59,7 +57,6 @@ type Model struct {
 }
 
 func New() Model {
-	gameOut := &c4game.Outputs{}
 	optionsOut := &optionsmenu.Outputs{}
 
 	rows, _ := util.ViewportSize()
@@ -80,8 +77,7 @@ func New() Model {
 
 		maxHeight: rows,
 
-		game:    nil,
-		gameOut: gameOut,
+		game: nil,
 
 		options:    optionsmenu.New(optionsOut, rows),
 		optionsOut: optionsOut,
@@ -104,10 +100,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.maxHeight = msg.Height
 
 		m.options, _ = m.options.Update(msg)
-
 		if m.game != nil {
 			m.game, _ = m.game.Update(msg)
 		}
+		return m, nil
+
+	case ui.SetFullHelpMsg:
+		show := bool(msg)
+		m.help.ShowAll = show
+
+		m.options, _ = m.options.Update(msg)
+		if m.game != nil {
+			m.game, _ = m.game.Update(msg)
+		}
+		return m, nil
+
+	case ui.BackMsg:
+		m.currentMenu = menuMain
+		return m, nil
 	}
 
 	switch m.currentMenu {
@@ -117,26 +127,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case menuGame:
 		m.game, cmd = m.game.Update(msg)
 
-		if m.gameOut.Back {
-			m.currentMenu = menuMain
-			m.gameOut.Back = false
-
-			m.help.ShowAll = bool(cmd().(c4game.SetFullHelpMsg))
-			m.internalUpdate(SetFullHelpMsg(m.help.ShowAll))
-			cmd = nil
-		}
-
 	case menuOptions:
 		m.options, cmd = m.options.Update(msg)
-
-		if m.optionsOut.Back {
-			m.currentMenu = menuMain
-			m.optionsOut.Back = false
-
-			m.help.ShowAll = bool(cmd().(optionsmenu.SetFullHelpMsg))
-			m.internalUpdate(SetFullHelpMsg(m.help.ShowAll))
-			cmd = nil
-		}
 	}
 
 	return m, cmd
@@ -146,23 +138,13 @@ func (m *Model) internalUpdate(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
-	case SetFullHelpMsg:
-		show := bool(msg)
-		m.help.ShowAll = show
-
-		m.options, _ = m.options.Update(optionsmenu.SetFullHelpMsg(show))
-
-		if m.game != nil {
-			m.game, _ = m.game.Update(c4game.SetFullHelpMsg(show))
-		}
-
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keys.Quit):
 			return tea.Quit
 
 		case key.Matches(msg, m.keys.Help):
-			m.internalUpdate(SetFullHelpMsg(!m.help.ShowAll))
+			cmd = func() tea.Msg { return ui.SetFullHelpMsg(!m.help.ShowAll) }
 
 		case key.Matches(msg, m.keys.Up):
 			if m.cursor > 0 {
@@ -177,15 +159,15 @@ func (m *Model) internalUpdate(msg tea.Msg) tea.Cmd {
 		case key.Matches(msg, m.keys.Select):
 			switch m.buttons[m.cursor] {
 			case buttonNewGame:
-				m.game = c4game.New(m.gameOut, *m.optionsOut, m.maxHeight)
-				m.game, _ = m.game.Update(c4game.SetFullHelpMsg(m.help.ShowAll))
+				m.game = c4game.New(*m.optionsOut, m.maxHeight)
+				cmd = func() tea.Msg { return ui.SetFullHelpMsg(m.help.ShowAll) }
 				m.currentMenu = menuGame
 
 			case buttonOptions:
 				m.currentMenu = menuOptions
 
 			case buttonHelp:
-				cmd = m.internalUpdate(SetFullHelpMsg(!m.help.ShowAll))
+				cmd = func() tea.Msg { return ui.SetFullHelpMsg(!m.help.ShowAll) }
 
 			case buttonQuit:
 				return tea.Quit

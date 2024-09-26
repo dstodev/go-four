@@ -10,13 +10,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/dstodev/go-four/c4"
+	"github.com/dstodev/go-four/ui"
 	"github.com/dstodev/go-four/ui/optionsmenu"
 	"github.com/dstodev/go-four/util"
 )
-
-type Outputs struct {
-	Back bool
-}
 
 type button int
 
@@ -34,10 +31,7 @@ func (b button) String() string {
 	}[b]
 }
 
-type SetFullHelpMsg bool
-
 type Model struct {
-	outputs *Outputs
 	options optionsmenu.Outputs
 
 	cursor int
@@ -53,7 +47,7 @@ type Model struct {
 	help help.Model
 }
 
-func New(outputs *Outputs, options optionsmenu.Outputs, height int) Model {
+func New(options optionsmenu.Outputs, height int) Model {
 	game := c4.NewGame(options.Rows, options.Columns, options.ToWin, options.MaxTurns)
 	game.Start()
 
@@ -61,7 +55,6 @@ func New(outputs *Outputs, options optionsmenu.Outputs, height int) Model {
 	help.ShowAll = true
 
 	return Model{
-		outputs: outputs,
 		options: options,
 
 		cursor: 0,
@@ -90,7 +83,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
-	case SetFullHelpMsg:
+	case ui.SetFullHelpMsg:
 		m.help.ShowAll = bool(msg)
 
 	case tea.WindowSizeMsg:
@@ -103,11 +96,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case key.Matches(msg, m.keys.Back):
-			m.outputs.Back = true
-			cmd = func() tea.Msg { return SetFullHelpMsg(m.help.ShowAll) }
+			cmd = func() tea.Msg { return ui.BackMsg{} }
 
 		case key.Matches(msg, m.keys.Help):
-			m.help.ShowAll = !m.help.ShowAll
+			cmd = func() tea.Msg { return ui.SetFullHelpMsg(!m.help.ShowAll) }
 
 		case key.Matches(msg, m.keys.Up):
 			if m.cursor > 0 {
@@ -139,8 +131,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 			case Back:
-				m.outputs.Back = true
-				cmd = func() tea.Msg { return SetFullHelpMsg(m.help.ShowAll) }
+				cmd = func() tea.Msg { return ui.BackMsg{} }
 
 			case Quit:
 				return m, tea.Quit
