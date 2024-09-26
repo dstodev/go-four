@@ -4,39 +4,40 @@ import (
 	"testing"
 
 	"github.com/dstodev/go-four/c4"
+	"github.com/dstodev/go-four/util"
 )
 
 func TestNewBoard(t *testing.T) {
 	b := c4.NewBoard(1, 2)
 
-	assertEqual(t, 1, b.RowCount())
-	assertEqual(t, 2, b.ColCount())
-	assertEqual(t, c4.None, b.Get(0, 0))
+	util.AssertEqual(t, 1, b.RowCount())
+	util.AssertEqual(t, 2, b.ColCount())
+	util.AssertEqual(t, c4.None, b.Get(0, 0))
 }
 
 func TestBoardInBounds(t *testing.T) {
 	b := c4.NewBoard(1, 1)
 
-	assertEqual(t, true, b.InBounds(0, 0))
-	assertEqual(t, false, b.InBounds(-1, 1))
-	assertEqual(t, false, b.InBounds(-1, 0))
-	assertEqual(t, false, b.InBounds(-1, 1))
-	assertEqual(t, false, b.InBounds(0, -1))
-	assertEqual(t, false, b.InBounds(0, 1))
-	assertEqual(t, false, b.InBounds(1, -1))
-	assertEqual(t, false, b.InBounds(1, 0))
-	assertEqual(t, false, b.InBounds(1, 1))
+	util.AssertEqual(t, true, b.InBounds(0, 0))
+	util.AssertEqual(t, false, b.InBounds(-1, 1))
+	util.AssertEqual(t, false, b.InBounds(-1, 0))
+	util.AssertEqual(t, false, b.InBounds(-1, 1))
+	util.AssertEqual(t, false, b.InBounds(0, -1))
+	util.AssertEqual(t, false, b.InBounds(0, 1))
+	util.AssertEqual(t, false, b.InBounds(1, -1))
+	util.AssertEqual(t, false, b.InBounds(1, 0))
+	util.AssertEqual(t, false, b.InBounds(1, 1))
 }
 
 func TestBoardIndexing(t *testing.T) {
 	b := c4.NewBoard(1, 1)
 
 	// Get in- and out-of bounds
-	assertEqual(t, c4.None, b.Get(0, 0))
-	assertEqual(t, c4.None, b.Get(0, 1))
-	assertEqual(t, c4.None, b.Get(0, -1))
-	assertEqual(t, c4.None, b.Get(1, 0))
-	assertEqual(t, c4.None, b.Get(-1, 0))
+	util.AssertEqual(t, c4.None, b.Get(0, 0))
+	util.AssertEqual(t, c4.None, b.Get(0, 1))
+	util.AssertEqual(t, c4.None, b.Get(0, -1))
+	util.AssertEqual(t, c4.None, b.Get(1, 0))
+	util.AssertEqual(t, c4.None, b.Get(-1, 0))
 
 	// Set in- and out-of bounds
 	b.
@@ -47,11 +48,11 @@ func TestBoardIndexing(t *testing.T) {
 		Set(-1, 0, c4.One)
 
 	// Assert only in-bounds changes
-	assertEqual(t, c4.One, b.Get(0, 0))
-	assertEqual(t, c4.None, b.Get(0, 1))
-	assertEqual(t, c4.None, b.Get(0, -1))
-	assertEqual(t, c4.None, b.Get(1, 0))
-	assertEqual(t, c4.None, b.Get(-1, 0))
+	util.AssertEqual(t, c4.One, b.Get(0, 0))
+	util.AssertEqual(t, c4.None, b.Get(0, 1))
+	util.AssertEqual(t, c4.None, b.Get(0, -1))
+	util.AssertEqual(t, c4.None, b.Get(1, 0))
+	util.AssertEqual(t, c4.None, b.Get(-1, 0))
 }
 
 func TestBoardIsEqual(t *testing.T) {
@@ -60,13 +61,13 @@ func TestBoardIsEqual(t *testing.T) {
 	b3 := c4.NewBoard(1, 2)
 	b4 := c4.NewBoard(2, 1)
 
-	assertEqual(t, true, b1.IsEqual(b2))
-	assertEqual(t, false, b1.IsEqual(b3))
-	assertEqual(t, false, b1.IsEqual(b4))
+	util.AssertEqual(t, true, b1.IsEqual(b2))
+	util.AssertEqual(t, false, b1.IsEqual(b3))
+	util.AssertEqual(t, false, b1.IsEqual(b4))
 
 	b1.Set(0, 0, c4.One)
 
-	assertEqual(t, false, b1.IsEqual(b2))
+	util.AssertEqual(t, false, b1.IsEqual(b2))
 }
 
 func TestBoardClone(t *testing.T) {
@@ -76,8 +77,8 @@ func TestBoardClone(t *testing.T) {
 
 	b1.Set(0, 0, c4.One)
 
-	assertEqual(t, c4.One, b2.Get(0, 0))
-	assertEqual(t, c4.None, b3.Get(0, 0))
+	util.AssertEqual(t, c4.One, b2.Get(0, 0))
+	util.AssertEqual(t, c4.None, b3.Get(0, 0))
 }
 
 func TestBoardNeighbor(t *testing.T) {
@@ -99,18 +100,18 @@ func TestBoardNeighbor(t *testing.T) {
 		Set(2, 2, 8)
 
 	// Test all directions centered on 4
-	assertEqual(t, 4, b.Neighbor(1, 1, c4.NoDirection))
-	assertEqual(t, 1, b.Neighbor(1, 1, c4.North))
-	assertEqual(t, 2, b.Neighbor(1, 1, c4.NorthEast))
-	assertEqual(t, 5, b.Neighbor(1, 1, c4.East))
-	assertEqual(t, 8, b.Neighbor(1, 1, c4.SouthEast))
-	assertEqual(t, 7, b.Neighbor(1, 1, c4.South))
-	assertEqual(t, 6, b.Neighbor(1, 1, c4.SouthWest))
-	assertEqual(t, 3, b.Neighbor(1, 1, c4.West))
-	assertEqual(t, 0, b.Neighbor(1, 1, c4.NorthWest))
+	util.AssertEqual(t, c4.Player(4), b.Neighbor(1, 1, c4.NoDirection))
+	util.AssertEqual(t, c4.Player(1), b.Neighbor(1, 1, c4.North))
+	util.AssertEqual(t, c4.Player(2), b.Neighbor(1, 1, c4.NorthEast))
+	util.AssertEqual(t, c4.Player(5), b.Neighbor(1, 1, c4.East))
+	util.AssertEqual(t, c4.Player(8), b.Neighbor(1, 1, c4.SouthEast))
+	util.AssertEqual(t, c4.Player(7), b.Neighbor(1, 1, c4.South))
+	util.AssertEqual(t, c4.Player(6), b.Neighbor(1, 1, c4.SouthWest))
+	util.AssertEqual(t, c4.Player(3), b.Neighbor(1, 1, c4.West))
+	util.AssertEqual(t, c4.Player(0), b.Neighbor(1, 1, c4.NorthWest))
 
 	// Test out of bounds
-	assertEqual(t, c4.None, b.Neighbor(0, 0, c4.North))
+	util.AssertEqual(t, c4.None, b.Neighbor(0, 0, c4.North))
 }
 
 func TestBoardCountDirection(t *testing.T) {
@@ -138,20 +139,20 @@ func TestBoardCountDirection(t *testing.T) {
 	   4 - - - - -  <-- and at the bottom-left (4,0)
 	*/
 
-	assertEqual(t, 3, b.CountDirection(2, 2, c4.North))
-	assertEqual(t, 3, b.CountDirection(2, 2, c4.NorthEast))
-	assertEqual(t, 1, b.CountDirection(2, 2, c4.East))
-	assertEqual(t, 1, b.CountDirection(2, 2, c4.SouthEast))
-	assertEqual(t, 2, b.CountDirection(2, 2, c4.South))
-	assertEqual(t, 2, b.CountDirection(2, 2, c4.SouthWest))
-	assertEqual(t, 2, b.CountDirection(2, 2, c4.West))
-	assertEqual(t, 1, b.CountDirection(2, 2, c4.NorthWest))
+	util.AssertEqual(t, 3, b.CountDirection(2, 2, c4.North))
+	util.AssertEqual(t, 3, b.CountDirection(2, 2, c4.NorthEast))
+	util.AssertEqual(t, 1, b.CountDirection(2, 2, c4.East))
+	util.AssertEqual(t, 1, b.CountDirection(2, 2, c4.SouthEast))
+	util.AssertEqual(t, 2, b.CountDirection(2, 2, c4.South))
+	util.AssertEqual(t, 2, b.CountDirection(2, 2, c4.SouthWest))
+	util.AssertEqual(t, 2, b.CountDirection(2, 2, c4.West))
+	util.AssertEqual(t, 1, b.CountDirection(2, 2, c4.NorthWest))
 
 	// At the empty bottom-left, facing top-right
-	assertEqual(t, 1, b.CountDirection(4, 0, c4.NorthEast))
+	util.AssertEqual(t, 1, b.CountDirection(4, 0, c4.NorthEast))
 
 	// Out of bounds
-	assertEqual(t, 0, b.CountDirection(-1, 0, c4.North))
+	util.AssertEqual(t, 0, b.CountDirection(-1, 0, c4.North))
 }
 
 func TestBoardCountBidirection(t *testing.T) {
@@ -179,22 +180,22 @@ func TestBoardCountBidirection(t *testing.T) {
 	   4 - - - - -  <-- and at the bottom-left (4,0)
 	*/
 
-	assertEqual(t, 4, b.CountBidirection(2, 2, c4.North))
-	assertEqual(t, 4, b.CountBidirection(2, 2, c4.NorthEast))
-	assertEqual(t, 2, b.CountBidirection(2, 2, c4.East))
-	assertEqual(t, 1, b.CountBidirection(2, 2, c4.SouthEast))
-	assertEqual(t, 4, b.CountBidirection(2, 2, c4.South))
-	assertEqual(t, 4, b.CountBidirection(2, 2, c4.SouthWest))
-	assertEqual(t, 2, b.CountBidirection(2, 2, c4.West))
-	assertEqual(t, 1, b.CountBidirection(2, 2, c4.NorthWest))
+	util.AssertEqual(t, 4, b.CountBidirection(2, 2, c4.North))
+	util.AssertEqual(t, 4, b.CountBidirection(2, 2, c4.NorthEast))
+	util.AssertEqual(t, 2, b.CountBidirection(2, 2, c4.East))
+	util.AssertEqual(t, 1, b.CountBidirection(2, 2, c4.SouthEast))
+	util.AssertEqual(t, 4, b.CountBidirection(2, 2, c4.South))
+	util.AssertEqual(t, 4, b.CountBidirection(2, 2, c4.SouthWest))
+	util.AssertEqual(t, 2, b.CountBidirection(2, 2, c4.West))
+	util.AssertEqual(t, 1, b.CountBidirection(2, 2, c4.NorthWest))
 
 	// At the empty bottom-left, facing top-right
 	// Counts player 0 ("None") as well, hence 1 where there is no player
-	assertEqual(t, 1, b.CountBidirection(4, 0, c4.NorthEast))
+	util.AssertEqual(t, 1, b.CountBidirection(4, 0, c4.NorthEast))
 
 	// Out of bounds
-	assertEqual(t, 0, b.CountBidirection(-1, 2, c4.North))
-	assertEqual(t, 0, b.CountBidirection(2, 5, c4.West))
+	util.AssertEqual(t, 0, b.CountBidirection(-1, 2, c4.North))
+	util.AssertEqual(t, 0, b.CountBidirection(2, 5, c4.West))
 }
 
 func TestBoardRows(t *testing.T) {
@@ -220,7 +221,7 @@ func TestBoardRows(t *testing.T) {
 
 	for i, row := range b.Rows() {
 		for j, cell := range row {
-			assertEqual(t, i*b.ColCount()+j, int(cell))
+			util.AssertEqual(t, i*b.ColCount()+j, int(cell))
 		}
 	}
 

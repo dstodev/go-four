@@ -4,17 +4,18 @@ import (
 	"testing"
 
 	"github.com/dstodev/go-four/c4"
+	"github.com/dstodev/go-four/util"
 )
 
 func TestGameStatusDefault(t *testing.T) {
 	var actual c4.GameStatus
 
-	assertEqual(t, c4.Initial, actual)
+	util.AssertEqual(t, c4.Initial, actual)
 }
 
 func TestGameStatusString(t *testing.T) {
-	assertEqual(t, "Initial", c4.Initial.String())
-	assertEqual(t, "Running", c4.Running.String())
-	assertEqual(t, "Completed", c4.Completed.String())
-	assertEqual(t, "Tied", c4.Draw.String())
+	util.AssertEqual(t, "Initial", c4.Initial.String())
+	util.AssertEqual(t, "Running", c4.Running.String())
+	util.AssertEqual(t, "Completed", c4.Completed.String())
+	util.AssertEqual(t, "Tied", c4.Draw.String())
 }

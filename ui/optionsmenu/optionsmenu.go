@@ -3,7 +3,6 @@ package optionsmenu
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -11,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	tb "github.com/dstodev/go-four/ui/textbox"
+	"github.com/dstodev/go-four/util"
 )
 
 type Outputs struct {
@@ -30,22 +30,25 @@ type Outputs struct {
 	Player2Color     string
 }
 
+type SetFullHelpMsg bool
+
 type Model struct {
 	outputs *Outputs
 
 	cursor int
-	height int
 
 	buttons []action
 
 	inputs         map[action]tb.Model
 	currentTextbox action
 
+	maxHeight int
+
 	keys KeyMap
 	help help.Model
 }
 
-func New(outputs *Outputs) Model {
+func New(outputs *Outputs, height int) Model {
 	*outputs = Outputs{
 		Back: false,
 
@@ -96,12 +99,13 @@ func New(outputs *Outputs) Model {
 		outputs: outputs,
 
 		cursor: 0,
-		height: 20,
 
 		buttons: buttons,
 
 		inputs:         inputs,
 		currentTextbox: -1,
+
+		maxHeight: height,
 
 		keys: Keys,
 		help: help,
@@ -118,8 +122,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
+	case SetFullHelpMsg:
+		m.help.ShowAll = bool(msg)
+
 	case tea.WindowSizeMsg:
 		m.help.Width = msg.Width
+		m.maxHeight = msg.Height
 
 	case tea.KeyMsg:
 		switch {
@@ -128,6 +136,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.Back):
 			m.outputs.Back = true
+			cmd = func() tea.Msg { return SetFullHelpMsg(m.help.ShowAll) }
 
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
@@ -148,6 +157,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch b {
 			case Back:
 				m.outputs.Back = true
+				cmd = func() tea.Msg { return SetFullHelpMsg(m.help.ShowAll) }
 
 			default:
 				box := m.inputs[b]
@@ -171,7 +181,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 					box.Leave(oppositeBox)
 				}
-
 				m.inputs[b] = box
 			}
 		}
@@ -251,10 +260,11 @@ func (m Model) View() string {
 	}
 
 	helpView := m.help.View(m.keys)
-	height := m.height - strings.Count(view, "\n") - strings.Count(helpView, "\n")
+	view += "\n" + helpView
 
-	view += strings.Repeat("\n", height)
-	view += helpView
+	height := util.CountLines(view)
+	height = util.Min(m.maxHeight, height)
+	height = util.Max(0, height)
 
-	return view
+	return util.LastNLines(view, height)
 }

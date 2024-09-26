@@ -4,13 +4,14 @@ import (
 	"testing"
 
 	"github.com/dstodev/go-four/c4"
+	"github.com/dstodev/go-four/util"
 )
 
 func TestNewPoint(t *testing.T) {
 	point := c4.NewPoint(1, 2)
 
-	assertEqual(t, 1, point.Row)
-	assertEqual(t, 2, point.Col)
+	util.AssertEqual(t, 1, point.Row)
+	util.AssertEqual(t, 2, point.Col)
 }
 
 func TestPointDestructure(t *testing.T) {
@@ -18,8 +19,8 @@ func TestPointDestructure(t *testing.T) {
 
 	r, c := point.Get()
 
-	assertEqual(t, 1, r)
-	assertEqual(t, 2, c)
+	util.AssertEqual(t, 1, r)
+	util.AssertEqual(t, 2, c)
 }
 
 func TestPointAdd(t *testing.T) {
@@ -28,7 +29,7 @@ func TestPointAdd(t *testing.T) {
 
 	result := point.Add(other)
 
-	assertEqual(t, c4.Point{4, -2}, result)
+	util.AssertEqual(t, c4.Point{4, -2}, result)
 }
 
 func TestPointStep(t *testing.T) {
@@ -43,12 +44,12 @@ func TestPointStep(t *testing.T) {
 	w := point.Step(c4.West)
 	nw := point.Step(c4.NorthWest)
 
-	assertEqual(t, c4.Point{-1, 0}, n)
-	assertEqual(t, c4.Point{-1, 1}, ne)
-	assertEqual(t, c4.Point{0, 1}, e)
-	assertEqual(t, c4.Point{1, 1}, se)
-	assertEqual(t, c4.Point{1, 0}, s)
-	assertEqual(t, c4.Point{1, -1}, sw)
-	assertEqual(t, c4.Point{0, -1}, w)
-	assertEqual(t, c4.Point{-1, -1}, nw)
+	util.AssertEqual(t, c4.Point{-1, 0}, n)
+	util.AssertEqual(t, c4.Point{-1, 1}, ne)
+	util.AssertEqual(t, c4.Point{0, 1}, e)
+	util.AssertEqual(t, c4.Point{1, 1}, se)
+	util.AssertEqual(t, c4.Point{1, 0}, s)
+	util.AssertEqual(t, c4.Point{1, -1}, sw)
+	util.AssertEqual(t, c4.Point{0, -1}, w)
+	util.AssertEqual(t, c4.Point{-1, -1}, nw)
 }

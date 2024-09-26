@@ -11,6 +11,7 @@ import (
 
 	"github.com/dstodev/go-four/c4"
 	"github.com/dstodev/go-four/ui/optionsmenu"
+	"github.com/dstodev/go-four/util"
 )
 
 type Outputs struct {
@@ -33,6 +34,8 @@ func (b button) String() string {
 	}[b]
 }
 
+type SetFullHelpMsg bool
+
 type Model struct {
 	outputs *Outputs
 	options optionsmenu.Outputs
@@ -42,13 +45,15 @@ type Model struct {
 
 	buttons []button
 
+	maxHeight int
+
 	game c4.Game
 
 	keys KeyMap
 	help help.Model
 }
 
-func New(outputs *Outputs, options optionsmenu.Outputs) Model {
+func New(outputs *Outputs, options optionsmenu.Outputs, height int) Model {
 	game := c4.NewGame(options.Rows, options.Columns, options.ToWin, options.MaxTurns)
 	game.Start()
 
@@ -68,6 +73,8 @@ func New(outputs *Outputs, options optionsmenu.Outputs) Model {
 			Quit,
 		},
 
+		maxHeight: height,
+
 		game: game,
 
 		keys: Keys,
@@ -80,7 +87,12 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
+	case SetFullHelpMsg:
+		m.help.ShowAll = bool(msg)
+
 	case tea.WindowSizeMsg:
 		m.help.Width = msg.Width
 
@@ -91,6 +103,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.Back):
 			m.outputs.Back = true
+			cmd = func() tea.Msg { return SetFullHelpMsg(m.help.ShowAll) }
 
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
@@ -123,8 +136,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.buttons = []button{Back, Quit}
 					m.cursor = 0
 				}
+
 			case Back:
 				m.outputs.Back = true
+				cmd = func() tea.Msg { return SetFullHelpMsg(m.help.ShowAll) }
+
 			case Quit:
 				return m, tea.Quit
 			}
@@ -139,7 +155,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.keys.Right.SetEnabled(false)
 	}
 
-	return m, nil
+	return m, cmd
 }
 
 func (m Model) View() string {
@@ -292,10 +308,11 @@ func (m Model) View() string {
 	}
 
 	helpView := m.help.View(m.keys)
-	// height := m.height - strings.Count(view, "\n") - strings.Count(helpView, "\n")
-
-	// view += strings.Repeat("\n", height)
 	view += "\n" + helpView
 
-	return view
+	height := util.CountLines(view)
+	height = util.Min(m.maxHeight, height)
+	height = util.Max(0, height)
+
+	return util.LastNLines(view, height)
 }
