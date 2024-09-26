@@ -102,6 +102,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.help.Width = msg.Width
 		m.maxHeight = msg.Height
+
+		m.options, _ = m.options.Update(msg)
+
+		if m.game != nil {
+			m.game, _ = m.game.Update(msg)
+		}
 	}
 
 	switch m.currentMenu {
@@ -143,7 +149,9 @@ func (m *Model) internalUpdate(msg tea.Msg) tea.Cmd {
 	case SetFullHelpMsg:
 		show := bool(msg)
 		m.help.ShowAll = show
+
 		m.options, _ = m.options.Update(optionsmenu.SetFullHelpMsg(show))
+
 		if m.game != nil {
 			m.game, _ = m.game.Update(c4game.SetFullHelpMsg(show))
 		}
@@ -172,10 +180,13 @@ func (m *Model) internalUpdate(msg tea.Msg) tea.Cmd {
 				m.game = c4game.New(m.gameOut, *m.optionsOut, m.maxHeight)
 				m.game, _ = m.game.Update(c4game.SetFullHelpMsg(m.help.ShowAll))
 				m.currentMenu = menuGame
+
 			case buttonOptions:
 				m.currentMenu = menuOptions
+
 			case buttonHelp:
 				cmd = m.internalUpdate(SetFullHelpMsg(!m.help.ShowAll))
+
 			case buttonQuit:
 				return tea.Quit
 			}

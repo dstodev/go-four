@@ -95,6 +95,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		m.help.Width = msg.Width
+		m.maxHeight = msg.Height
 
 	case tea.KeyMsg:
 		switch {
