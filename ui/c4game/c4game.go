@@ -34,8 +34,7 @@ func (b button) String() string {
 type Model struct {
 	options optionsmenu.Outputs
 
-	cursor int
-	column int
+	cursor *util.Cursor
 
 	buttons []button
 
@@ -43,7 +42,7 @@ type Model struct {
 
 	game c4.Game
 
-	keys KeyMap
+	keys ui.KeyMap
 	help help.Model
 }
 
@@ -57,8 +56,7 @@ func New(options optionsmenu.Outputs, height int) *Model {
 	return &Model{
 		options: options,
 
-		cursor: 0,
-		column: 0,
+		cursor: util.NewCursor(),
 
 		buttons: []button{
 			Place,
@@ -70,7 +68,7 @@ func New(options optionsmenu.Outputs, height int) *Model {
 
 		game: game,
 
-		keys: Keys,
+		keys: ui.DefaultKeys,
 		help: help,
 	}
 }
@@ -102,32 +100,23 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			cmd = ui.SetFullHelpCmd(!m.help.ShowAll)
 
 		case key.Matches(msg, m.keys.Up):
-			if m.cursor > 0 {
-				m.cursor--
-			}
+			m.cursor.MoveUp()
 
 		case key.Matches(msg, m.keys.Down):
-			if m.cursor < len(m.buttons)-1 {
-				m.cursor++
-			}
+			m.cursor.MoveDown()
 
 		case key.Matches(msg, m.keys.Left):
-			if m.column > 0 {
-				m.column--
-			}
+			m.cursor.MoveLeft()
 
 		case key.Matches(msg, m.keys.Right):
-			if m.column < m.game.Board().ColCount()-1 {
-				m.column++
-			}
+			m.cursor.MoveRight()
 
 		case key.Matches(msg, m.keys.Select):
-			switch m.buttons[m.cursor] {
+			switch m.buttons[m.cursor.Row()] {
 			case Place:
-				m.game.PlayTurn(m.column)
+				m.game.PlayTurn(m.cursor.Col())
 				if m.game.Status() == c4.Completed || m.game.Status() == c4.Draw {
 					m.buttons = []button{Back, Quit}
-					m.cursor = 0
 				}
 
 			case Back:
@@ -139,7 +128,10 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		}
 	}
 
-	if m.buttons[m.cursor] == Place && m.game.Status() == c4.Running {
+	m.cursor.ConstrainRow(0, len(m.buttons))
+	m.cursor.ConstrainCol(0, m.game.Board().ColCount())
+
+	if m.buttons[m.cursor.Row()] == Place && m.game.Status() == c4.Running {
 		m.keys.Left.SetEnabled(true)
 		m.keys.Right.SetEnabled(true)
 	} else {
@@ -175,6 +167,9 @@ func (m Model) View() string {
 
 	board := m.game.Board()
 
+	row := m.cursor.Row()
+	col := m.cursor.Col()
+
 	view += " "
 
 	var partOfWin [][]bool
@@ -193,7 +188,7 @@ func (m Model) View() string {
 		view += fmt.Sprintf("Game over! %s wins! (Turn #%d)", playerName, m.game.TurnCount())
 
 		// Get last placed token
-		winPoint := c4.NewPoint(0, m.column)
+		winPoint := c4.NewPoint(0, col)
 
 		for ; winPoint.Row < board.RowCount(); winPoint = winPoint.Step(c4.South) {
 			if board.Get(winPoint.Get()) == m.game.Turn() {
@@ -225,7 +220,7 @@ func (m Model) View() string {
 	boardLeftPadLength := 4
 	boardLeftPad := strings.Repeat(" ", boardLeftPadLength)
 
-	view += " " + strings.Repeat("    ", m.column)
+	view += " " + strings.Repeat("    ", col)
 	view += boardLeftPad + " " + playerStyle.Render("↓") + " \n"
 
 	for i, r := range board.Rows() {
@@ -234,11 +229,11 @@ func (m Model) View() string {
 		for j, c := range r {
 			aboveToken := board.Get(i, j) == c4.None &&
 				board.Neighbor(i, j, c4.South) != c4.None &&
-				j == m.column
+				j == col
 
 			bottomRowColumn := i == board.RowCount()-1 &&
 				board.Get(i, j) == c4.None &&
-				j == m.column
+				j == col
 
 			placementIndicator := (aboveToken || bottomRowColumn) && m.game.Status() == c4.Running
 
@@ -292,7 +287,7 @@ func (m Model) View() string {
 	for _, b := range m.buttons {
 		cursor := " "
 
-		if m.buttons[m.cursor] == b {
+		if m.buttons[row] == b {
 			cursor = ">"
 		}
 

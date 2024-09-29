@@ -32,7 +32,7 @@ type Outputs struct {
 type Model struct {
 	outputs *Outputs
 
-	cursor int
+	cursor *util.Cursor
 
 	buttons []action
 
@@ -41,7 +41,7 @@ type Model struct {
 
 	maxHeight int
 
-	keys KeyMap
+	keys ui.KeyMap
 	help help.Model
 }
 
@@ -90,10 +90,13 @@ func New(outputs *Outputs, height int) Model {
 		return buttons[i] < buttons[j]
 	})
 
+	keys := ui.DefaultKeys
+	resetKeymap(&keys)
+
 	return Model{
 		outputs: outputs,
 
-		cursor: 0,
+		cursor: util.NewCursor(),
 
 		buttons: buttons,
 
@@ -102,9 +105,15 @@ func New(outputs *Outputs, height int) Model {
 
 		maxHeight: height,
 
-		keys: Keys,
+		keys: keys,
 		help: help,
 	}
+}
+
+func resetKeymap(km *ui.KeyMap) {
+	*km = ui.DefaultKeys
+	km.Left.SetEnabled(false)
+	km.Right.SetEnabled(false)
 }
 
 func (m Model) Init() tea.Cmd {
@@ -112,8 +121,6 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
-	forwardMsg := true
-
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
@@ -136,54 +143,64 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			cmd = ui.SetFullHelpCmd(!m.help.ShowAll)
 
 		case key.Matches(msg, m.keys.Up):
-			if m.cursor > 0 {
-				m.cursor--
-			}
+			m.cursor.MoveUp()
 
 		case key.Matches(msg, m.keys.Down):
-			if m.cursor < len(m.buttons)-1 {
-				m.cursor++
-			}
+			m.cursor.MoveDown()
 
 		case key.Matches(msg, m.keys.Select):
-			b := m.buttons[m.cursor]
+			b := m.buttons[m.cursor.Row()]
 
 			switch b {
 			case Back:
 				cmd = ui.BackCmd
 
 			default:
-				box := m.inputs[b]
-
-				if m.currentTextbox == -1 {
-					forwardMsg = false
-
-					m.currentTextbox = b
-					m.constrainKeymap()
-
-					cmd = box.Enter()
-				} else {
-					m.currentTextbox = -1
-					m.resetKeymap()
-
-					box.Leave()
-
-					if opposite := b.Opposite(); opposite != -1 {
-						oppositeBox := m.inputs[opposite]
-						box.AssertDifferent(oppositeBox)
-					}
-				}
-				m.inputs[b] = box
+				cmd = m.toggleInput(b)
+				return m, cmd
 			}
 		}
 	}
 
-	if forwardMsg && m.currentTextbox != -1 {
+	m.cursor.ConstrainRow(0, len(m.buttons))
+
+	if m.anyInputFocused() {
 		box := m.inputs[m.currentTextbox]
 		m.inputs[m.currentTextbox], cmd = box.Update(msg)
 	}
 
 	return m, cmd
+}
+
+func (m *Model) toggleInput(b action) tea.Cmd {
+	var cmd tea.Cmd
+
+	box := m.inputs[b]
+
+	if m.anyInputFocused() {
+		m.currentTextbox = -1
+		resetKeymap(&m.keys)
+
+		box.Leave()
+
+		if opposite := b.Opposite(); opposite != -1 {
+			oppositeBox := m.inputs[opposite]
+			box.AssertDifferent(oppositeBox)
+		}
+	} else {
+		m.currentTextbox = b
+		m.constrainKeymap()
+
+		cmd = box.Enter()
+	}
+
+	m.inputs[b] = box
+
+	return cmd
+}
+
+func (m Model) anyInputFocused() bool {
+	return m.currentTextbox != -1
 }
 
 func (m *Model) constrainKeymap() {
@@ -192,10 +209,6 @@ func (m *Model) constrainKeymap() {
 	m.keys.Down.SetEnabled(false)
 	m.keys.Select.SetKeys("esc", "enter")
 	m.keys.Select.SetHelp("esc/enter", "Confirm")
-}
-
-func (m *Model) resetKeymap() {
-	m.keys = Keys
 }
 
 func (m Model) View() string {
@@ -207,7 +220,7 @@ func (m Model) View() string {
 	for _, b := range m.buttons {
 		cursor := " "
 
-		if m.buttons[m.cursor] == b {
+		if m.buttons[m.cursor.Row()] == b {
 			cursor = ">"
 		}
 

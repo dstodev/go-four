@@ -9,7 +9,7 @@ func NewPoint(row, col int) Point {
 	return Point{row, col}
 }
 
-func (p Point) Get() (int, int) {
+func (p Point) Get() (row, col int) {
 	return p.Row, p.Col
 }
 

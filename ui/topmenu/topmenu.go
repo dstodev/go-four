@@ -40,7 +40,7 @@ const (
 )
 
 type Model struct {
-	cursor      int
+	cursor      *util.Cursor
 	currentMenu menu
 
 	buttons []button
@@ -52,7 +52,7 @@ type Model struct {
 	options    optionsmenu.Model
 	optionsOut *optionsmenu.Outputs
 
-	keys KeyMap
+	keys ui.KeyMap
 	help help.Model
 }
 
@@ -64,8 +64,15 @@ func New() Model {
 	help := help.New()
 	help.ShowAll = true
 
+	keys := ui.DefaultKeys
+	keys.Left.SetEnabled(false)
+	keys.Right.SetEnabled(false)
+	keys.Back.SetEnabled(false)
+	keys.Quit.SetKeys("esc", "ctrl+c")
+	keys.Quit.SetHelp("esc/ctrl+c", "Quit")
+
 	return Model{
-		cursor:      0,
+		cursor:      util.NewCursor(),
 		currentMenu: menuMain,
 
 		buttons: []button{
@@ -82,7 +89,7 @@ func New() Model {
 		options:    optionsmenu.New(optionsOut, rows),
 		optionsOut: optionsOut,
 
-		keys: Keys,
+		keys: keys,
 		help: help,
 	}
 }
@@ -147,17 +154,13 @@ func (m *Model) internalUpdate(msg tea.Msg) tea.Cmd {
 			cmd = ui.SetFullHelpCmd(!m.help.ShowAll)
 
 		case key.Matches(msg, m.keys.Up):
-			if m.cursor > 0 {
-				m.cursor--
-			}
+			m.cursor.MoveUp()
 
 		case key.Matches(msg, m.keys.Down):
-			if m.cursor < (len(m.buttons) - 1) {
-				m.cursor++
-			}
+			m.cursor.MoveDown()
 
 		case key.Matches(msg, m.keys.Select):
-			switch m.buttons[m.cursor] {
+			switch m.buttons[m.cursor.Row()] {
 			case buttonNewGame:
 				m.game = c4game.New(*m.optionsOut, m.maxHeight)
 				cmd = ui.SetFullHelpCmd(m.help.ShowAll)
@@ -175,6 +178,8 @@ func (m *Model) internalUpdate(msg tea.Msg) tea.Cmd {
 		}
 	}
 
+	m.cursor.ConstrainRow(0, len(m.buttons))
+
 	return cmd
 }
 
@@ -182,8 +187,10 @@ func (m Model) View() string {
 	switch m.currentMenu {
 	case menuMain:
 		return m.internalView()
+
 	case menuGame:
 		return m.game.View()
+
 	case menuOptions:
 		return m.options.View()
 	}
@@ -197,7 +204,7 @@ func (m Model) internalView() string {
 	for _, b := range m.buttons {
 		cursor := " "
 
-		if m.buttons[m.cursor] == b {
+		if m.buttons[m.cursor.Row()] == b {
 			cursor = ">"
 		}
 
