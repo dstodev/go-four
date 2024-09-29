@@ -214,9 +214,5 @@ func (m Model) internalView() string {
 	helpView := m.help.View(m.keys)
 	view += "\n" + helpView
 
-	height := util.CountLines(view)
-	height = util.Min(m.maxHeight, height)
-	height = util.Max(0, height)
-
-	return util.LastNLines(view, height)
+	return util.LastNLines(view, m.maxHeight)
 }

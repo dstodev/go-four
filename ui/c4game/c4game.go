@@ -155,9 +155,11 @@ func (m Model) View() string {
 	case c4.None:
 		// This style is used when there is a draw
 		playerStyle = lipgloss.NewStyle()
+
 	case c4.One:
 		playerName = m.options.Player1Name
 		playerStyle = player1Style
+
 	case c4.Two:
 		playerName = m.options.Player2Name
 		playerStyle = player2Style
@@ -297,9 +299,5 @@ func (m Model) View() string {
 	helpView := m.help.View(m.keys)
 	view += "\n" + helpView
 
-	height := util.CountLines(view)
-	height = util.Min(m.maxHeight, height)
-	height = util.Max(0, height)
-
-	return util.LastNLines(view, height)
+	return util.LastNLines(view, m.maxHeight)
 }
