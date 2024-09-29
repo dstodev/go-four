@@ -47,14 +47,14 @@ type Model struct {
 	help help.Model
 }
 
-func New(options optionsmenu.Outputs, height int) Model {
+func New(options optionsmenu.Outputs, height int) *Model {
 	game := c4.NewGame(options.Rows, options.Columns, options.ToWin, options.MaxTurns)
 	game.Start()
 
 	help := help.New()
 	help.ShowAll = true
 
-	return Model{
+	return &Model{
 		options: options,
 
 		cursor: 0,
@@ -79,7 +79,7 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {

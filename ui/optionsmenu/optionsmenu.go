@@ -111,7 +111,7 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	forwardMsg := true
 
 	var cmd tea.Cmd
@@ -156,23 +156,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				box := m.inputs[b]
 
 				if m.currentTextbox == -1 {
-					m.currentTextbox = b
 					forwardMsg = false
 
+					m.currentTextbox = b
 					m.constrainKeymap()
+
 					cmd = box.Enter()
 				} else {
 					m.currentTextbox = -1
-
 					m.resetKeymap()
 
-					var oppositeBox *tb.Model = nil
+					box.Leave()
 
 					if opposite := b.Opposite(); opposite != -1 {
-						copy := m.inputs[opposite]
-						oppositeBox = &copy
+						oppositeBox := m.inputs[opposite]
+						box.AssertDifferent(oppositeBox)
 					}
-					box.Leave(oppositeBox)
 				}
 				m.inputs[b] = box
 			}
@@ -181,9 +180,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	if forwardMsg && m.currentTextbox != -1 {
 		box := m.inputs[m.currentTextbox]
-		var newBox tea.Model
-		newBox, cmd = box.Update(msg)
-		m.inputs[m.currentTextbox] = newBox.(tb.Model)
+		m.inputs[m.currentTextbox], cmd = box.Update(msg)
 	}
 
 	return m, cmd

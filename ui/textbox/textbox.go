@@ -18,7 +18,7 @@ func (m Model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
 	return m, cmd
@@ -103,7 +103,7 @@ func (m *Model) Enter() tea.Cmd {
 	return cmd
 }
 
-func (m *Model) Leave(assertDifferent *Model) {
+func (m *Model) Leave() {
 	box := &m.input
 	box.Blur()
 
@@ -111,24 +111,27 @@ func (m *Model) Leave(assertDifferent *Model) {
 		box.Reset()
 	}
 
-	if assertDifferent != nil {
-		otherBox := &assertDifferent.input
+	m.updateOutput()
+}
 
-		equalToOther := func() bool {
-			return strings.EqualFold(valueOrPlaceholder(box), valueOrPlaceholder(otherBox))
-		}
+func (m *Model) AssertDifferent(other Model) {
+	box := &m.input
+	otherBox := &other.input
 
-		if equalToOther() {
-			box.Reset()
-
-			// If resetting causes a conflict (because the other box is using this box's placeholder)
-			if equalToOther() {
-				box.SetValue(otherBox.Placeholder)
-			}
-		}
+	equalToOther := func() bool {
+		return strings.EqualFold(valueOrPlaceholder(box), valueOrPlaceholder(otherBox))
 	}
 
-	m.updateOutput()
+	if equalToOther() {
+		box.Reset()
+
+		// If resetting causes a conflict (because the other box is using this box's placeholder)
+		if equalToOther() {
+			box.SetValue(otherBox.Placeholder)
+		}
+
+		m.updateOutput()
+	}
 }
 
 func (m *Model) isValid() bool {

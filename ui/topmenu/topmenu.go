@@ -47,9 +47,9 @@ type Model struct {
 
 	maxHeight int
 
-	game tea.Model
+	game *c4game.Model
 
-	options    tea.Model
+	options    optionsmenu.Model
 	optionsOut *optionsmenu.Outputs
 
 	keys KeyMap
@@ -101,7 +101,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.options, _ = m.options.Update(msg)
 		if m.game != nil {
-			m.game, _ = m.game.Update(msg)
+			*m.game, _ = m.game.Update(msg)
 		}
 		return m, nil
 
@@ -111,7 +111,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.options, _ = m.options.Update(msg)
 		if m.game != nil {
-			m.game, _ = m.game.Update(msg)
+			*m.game, _ = m.game.Update(msg)
 		}
 		return m, nil
 
@@ -125,7 +125,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd = m.internalUpdate(msg)
 
 	case menuGame:
-		m.game, cmd = m.game.Update(msg)
+		*m.game, cmd = m.game.Update(msg)
 
 	case menuOptions:
 		m.options, cmd = m.options.Update(msg)
