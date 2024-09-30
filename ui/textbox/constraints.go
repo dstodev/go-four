@@ -48,6 +48,6 @@ func ConstrainLessEq(target int) Constraint {
 func ConstrainHexColor(m Model) bool {
 	box := &m.input
 	value := valueOrPlaceholder(box)
-	pattern := regexp.MustCompile("[0-9a-fA-F]{6}")
+	pattern := regexp.MustCompile("^[0-9a-fA-F]{6}$")
 	return pattern.MatchString(value)
 }

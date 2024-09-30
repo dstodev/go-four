@@ -45,9 +45,9 @@ func TestLastNLinesPreservesNewlines(t *testing.T) {
 	elements := "a\nb\nc\nd\n\ne\n"
 	last5 := util.LastNLines(elements, 5)
 	util.AssertEqual(t, "c\nd\n\ne\n", last5)
-	// c\n
-	// d\n
-	// \n
-	// e\n
-	//
+	// 1. c\n
+	// 2. d\n
+	// 3. \n
+	// 4. e\n
+	// 5.
 }
