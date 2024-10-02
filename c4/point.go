@@ -1,8 +1,8 @@
 package c4
 
 type Point struct {
-	Row int
-	Col int
+	Row    int
+	Column int
 }
 
 func NewPoint(row, col int) Point {
@@ -10,7 +10,7 @@ func NewPoint(row, col int) Point {
 }
 
 func (p Point) Get() (row, col int) {
-	return p.Row, p.Col
+	return p.Row, p.Column
 }
 
 func (p Point) Step(direction Direction) Point {
@@ -18,5 +18,5 @@ func (p Point) Step(direction Direction) Point {
 }
 
 func (p Point) Add(other Point) Point {
-	return Point{p.Row + other.Row, p.Col + other.Col}
+	return Point{p.Row + other.Row, p.Column + other.Column}
 }

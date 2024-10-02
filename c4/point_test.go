@@ -11,7 +11,7 @@ func TestNewPoint(t *testing.T) {
 	point := c4.NewPoint(1, 2)
 
 	util.AssertEqual(t, 1, point.Row)
-	util.AssertEqual(t, 2, point.Col)
+	util.AssertEqual(t, 2, point.Column)
 }
 
 func TestPointDestructure(t *testing.T) {

@@ -59,6 +59,24 @@ func TestGameStart(t *testing.T) {
 	util.AssertEqual(t, 0, game.TurnCount())
 }
 
+func TestGameStartResetsGame(t *testing.T) {
+	game := c4.NewGame()
+
+	game.Start()
+	game.PlayTurn(0)
+
+	game.Start()
+
+	empty := c4.NewGame()
+	empty.Start()
+
+	util.AssertEqual(t, empty.Status(), game.Status())
+	util.AssertEqual(t, empty.Turn(), game.Turn())
+	util.AssertEqual(t, empty.TurnCount(), game.TurnCount())
+	util.AssertEqual(t, true, empty.Board().IsEqual(game.Board()))
+	util.AssertEqual(t, empty.History(), game.History())
+}
+
 func TestGamePlayTurnBeforeStart(t *testing.T) {
 	game := c4.NewGame()
 	board := game.Board().Clone()
@@ -74,6 +92,7 @@ func TestGamePlayTurnOutOfBounds(t *testing.T) {
 	game := c4.NewGame()
 	game.Start()
 	board := game.Board().Clone()
+	history := game.History()
 
 	game.PlayTurn(-1)
 
@@ -84,6 +103,7 @@ func TestGamePlayTurnOutOfBounds(t *testing.T) {
 	util.AssertEqual(t, true, board.IsEqual(game.Board()))
 	util.AssertEqual(t, c4.Running, game.Status())
 	util.AssertEqual(t, c4.One, game.Turn())
+	util.AssertEqual(t, history, game.History())
 	util.AssertEqual(t, 0, game.TurnCount())
 }
 
@@ -475,23 +495,6 @@ func TestFullGameLastWinner(t *testing.T) {
 	util.AssertEqual(t, c4.Completed, game.Status())
 	util.AssertEqual(t, c4.Two, game.Turn())
 	util.AssertEqual(t, 16, game.TurnCount())
-}
-
-func TestGameStartResetsGame(t *testing.T) {
-	game := c4.NewGame()
-
-	game.Start()
-	game.PlayTurn(0)
-
-	game.Start()
-
-	empty := c4.NewGame()
-	empty.Start()
-
-	util.AssertEqual(t, empty.Status(), game.Status())
-	util.AssertEqual(t, empty.Turn(), game.Turn())
-	util.AssertEqual(t, empty.TurnCount(), game.TurnCount())
-	util.AssertEqual(t, true, empty.Board().IsEqual(game.Board()))
 }
 
 func TestFullGamePlayerOneWins5InARow(t *testing.T) {

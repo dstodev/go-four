@@ -18,24 +18,20 @@ func ToBoardString(game Game) string {
 	return strings.Join(history_strs, ",")
 }
 
-func FromBoardString(rows, columns int, board_str string) Game {
-	game := NewGame(rows, columns)
-
+func FromBoardString(game Game, board_str string) Game {
 	if board_str == "" {
 		return game
 	}
 
-	history := strings.Split(board_str, ",")
+	game.Start() // Resets the game
 
-	if len(history) > 0 {
-		game.Start()
-	}
+	history := strings.Split(board_str, ",")
 
 	for _, column := range history {
 		column, err := strconv.Atoi(column)
-		if err != nil {
+		if err == nil {
+			game.PlayTurn(column)
 		}
-		game.PlayTurn(column)
 	}
 
 	return game

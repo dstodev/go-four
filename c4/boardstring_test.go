@@ -41,13 +41,15 @@ func TestToBoardStringTwo(t *testing.T) {
 }
 
 func TestFromBoardStringNone(t *testing.T) {
-	game := c4.FromBoardString(6, 7, "")
+	game := c4.NewGame(6, 7)
+	game = c4.FromBoardString(game, "")
 
 	util.AssertEqual(t, c4.Initial, game.Status())
 }
 
 func TestFromBoardStringOne(t *testing.T) {
-	game := c4.FromBoardString(6, 7, "0")
+	game := c4.NewGame(6, 7)
+	game = c4.FromBoardString(game, "0")
 
 	util.AssertEqual(t, c4.Running, game.Status())
 	util.AssertEqual(t, c4.One, game.Board().Get(5, 0))
@@ -55,10 +57,22 @@ func TestFromBoardStringOne(t *testing.T) {
 }
 
 func TestFromBoardStringTwo(t *testing.T) {
-	game := c4.FromBoardString(6, 7, "0,1")
+	game := c4.NewGame(6, 7)
+	game = c4.FromBoardString(game, "0,1")
 
 	util.AssertEqual(t, c4.Running, game.Status())
 	util.AssertEqual(t, c4.One, game.Board().Get(5, 0))
 	util.AssertEqual(t, c4.Two, game.Board().Get(5, 1))
 	util.AssertEqual(t, []int{0, 1}, game.History())
+}
+
+func TestFromBoardStringInvalid(t *testing.T) {
+	game := c4.NewGame(6, 7)
+	game = c4.FromBoardString(game, "a")
+
+	util.AssertEqual(t, 0, game.TurnCount())
+
+	game = c4.FromBoardString(game, "0,a,1")
+
+	util.AssertEqual(t, 2, game.TurnCount())
 }

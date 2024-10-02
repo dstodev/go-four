@@ -206,9 +206,9 @@ func (m Model) View() string {
 		}
 
 		for direction := c4.North; direction <= c4.NorthWest; direction++ {
-			if board.CountBidirection(winPoint.Row, winPoint.Col, direction) >= m.game.ToWin() {
+			if board.CountBidirection(winPoint.Row, winPoint.Column, direction) >= m.game.ToWin() {
 				for crawl := winPoint; board.Get(crawl.Get()) == m.game.Turn(); crawl = crawl.Step(direction) {
-					partOfWin[crawl.Row][crawl.Col] = true
+					partOfWin[crawl.Row][crawl.Column] = true
 				}
 			}
 		}

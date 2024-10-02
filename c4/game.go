@@ -78,6 +78,7 @@ func (game Game) Board() Board {
 func (game *Game) Start() {
 	game.status = Running
 	game.turn = 0
+	game.history = []int{}
 	game.board = NewBoard(game.board.RowCount(), game.board.ColCount())
 }
 
