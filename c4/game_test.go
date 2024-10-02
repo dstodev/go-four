@@ -12,6 +12,7 @@ func TestNewGame(t *testing.T) {
 
 	util.AssertEqual(t, c4.Initial, game.Status())
 	util.AssertEqual(t, c4.None, game.Turn())
+	util.AssertEqual(t, []int{}, game.History())
 	util.AssertEqual(t, 0, game.TurnCount())
 
 	util.AssertEqual(t, 6, game.Board().RowCount())
@@ -102,6 +103,88 @@ func TestGameTurnCount(t *testing.T) {
 
 	util.AssertEqual(t, c4.One, game.Turn())
 	util.AssertEqual(t, 2, game.TurnCount())
+}
+
+func TestGameHistory(t *testing.T) {
+	game := c4.NewGame()
+	game.Start()
+
+	util.AssertEqual(t, []int{}, game.History())
+
+	game.PlayTurn(0)
+	util.AssertEqual(t, []int{0}, game.History())
+
+	game.PlayTurn(1)
+	util.AssertEqual(t, []int{0, 1}, game.History())
+}
+
+func TestGameHistoryInitial(t *testing.T) {
+	game := c4.NewGame()
+
+	util.AssertEqual(t, []int{}, game.History())
+
+	game.PlayTurn(0)
+	util.AssertEqual(t, []int{}, game.History())
+}
+
+func TestGameHistoryCompleted(t *testing.T) {
+	game := c4.NewGame()
+	game.Start()
+
+	game.PlayTurn(0)
+	game.PlayTurn(1)
+	game.PlayTurn(0)
+	game.PlayTurn(1)
+	game.PlayTurn(0)
+	game.PlayTurn(1)
+
+	util.AssertEqual(t, []int{0, 1, 0, 1, 0, 1}, game.History())
+
+	util.AssertEqual(t, c4.Running, game.Status())
+	game.PlayTurn(0)
+	util.AssertEqual(t, c4.Completed, game.Status())
+
+	util.AssertEqual(t, []int{0, 1, 0, 1, 0, 1, 0}, game.History())
+
+	game.PlayTurn(0)
+
+	util.AssertEqual(t, []int{0, 1, 0, 1, 0, 1, 0}, game.History())
+}
+
+func TestGameHistoryInvalidPlacement(t *testing.T) {
+	game := c4.NewGame()
+	game.Start()
+
+	// out of bounds
+	game.PlayTurn(-1)
+	game.PlayTurn(game.Board().ColCount())
+
+	// column full
+	game.PlayTurn(0)
+	game.PlayTurn(0)
+	game.PlayTurn(0)
+	game.PlayTurn(0)
+	game.PlayTurn(0)
+	game.PlayTurn(0)
+
+	util.AssertEqual(t, 6, game.TurnCount())
+	util.AssertEqual(t, []int{0, 0, 0, 0, 0, 0}, game.History())
+
+	game.PlayTurn(0)
+
+	util.AssertEqual(t, 6, game.TurnCount())
+	util.AssertEqual(t, []int{0, 0, 0, 0, 0, 0}, game.History())
+}
+
+func TestGameHistoryDraw(t *testing.T) {
+	game := c4.NewGame(1, 1)
+	game.Start()
+
+	game.PlayTurn(0)
+	util.AssertEqual(t, []int{0}, game.History())
+
+	game.PlayTurn(0)
+	util.AssertEqual(t, []int{0}, game.History())
 }
 
 func TestGamePlayTurnCol0(t *testing.T) {

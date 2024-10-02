@@ -3,19 +3,27 @@ package c4
 type Game struct {
 	status   GameStatus
 	turn     int
+	history  []int
 	board    Board
 	toWin    int
 	maxTurns int
 }
 
 func NewGame(sz ...int) Game {
+	rows_cols := 2
+	rows_cols_toWin := 3
+	rows_cols_toWin_maxTurns := 4
+
 	switch len(sz) {
-	case 2:
+	case rows_cols:
 		sz = []int{sz[0], sz[1], 4, 0}
-	case 3:
+
+	case rows_cols_toWin:
 		sz = []int{sz[0], sz[1], sz[2], 0}
-	case 4:
-		// use all values
+
+	case rows_cols_toWin_maxTurns:
+		// use all values (skip default case)
+
 	default:
 		sz = []int{6, 7, 4, 0}
 	}
@@ -23,6 +31,7 @@ func NewGame(sz ...int) Game {
 	return Game{
 		status:   Initial,
 		turn:     0,
+		history:  []int{},
 		board:    NewBoard(sz[0], sz[1]),
 		toWin:    sz[2],
 		maxTurns: sz[3],
@@ -44,6 +53,10 @@ func (game Game) Turn() Player {
 	}
 
 	return player
+}
+
+func (game Game) History() []int {
+	return game.history
 }
 
 func (game Game) TurnCount() int {
@@ -69,6 +82,7 @@ func (game *Game) Start() {
 }
 
 func (game *Game) PlayTurn(column int) {
+
 	if game.status != Running {
 		return
 	}
@@ -81,6 +95,8 @@ func (game *Game) PlayTurn(column int) {
 		canPlace := game.board.Get(row, column) == None
 
 		if canPlace {
+			game.history = append(game.history, column)
+
 			game.board.Set(row, column, game.Turn())
 			game.turn += 1
 
@@ -96,14 +112,16 @@ func (game *Game) PlayTurn(column int) {
 }
 
 func (game Game) placementWins(row, column int) bool {
+	toWin := game.toWin
+
 	switch {
-	case game.board.CountBidirection(row, column, North) >= game.toWin:
+	case game.board.CountBidirection(row, column, North) >= toWin:
 		return true
-	case game.board.CountBidirection(row, column, NorthEast) >= game.toWin:
+	case game.board.CountBidirection(row, column, NorthEast) >= toWin:
 		return true
-	case game.board.CountBidirection(row, column, East) >= game.toWin:
+	case game.board.CountBidirection(row, column, East) >= toWin:
 		return true
-	case game.board.CountBidirection(row, column, SouthEast) >= game.toWin:
+	case game.board.CountBidirection(row, column, SouthEast) >= toWin:
 		return true
 	}
 	return false
