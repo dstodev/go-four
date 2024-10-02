@@ -4,11 +4,17 @@ import (
 	"strings"
 )
 
-func LastNLines(s string, n int) string {
+func LastNLines(s string, n int) []string {
 	tokens := strings.Split(s, "\n")
 
-	if n >= len(tokens) {
-		return s
+	if len(tokens) == 1 {
+		if tokens[0] == "" {
+			return []string{}
+		}
+		return tokens
 	}
-	return strings.Join(tokens[len(tokens)-n:], "\n")
+	if n >= len(tokens) {
+		return tokens
+	}
+	return tokens[len(tokens)-n:] // n==0 is ok
 }

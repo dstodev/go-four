@@ -2,6 +2,7 @@ package topmenu
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -214,5 +215,5 @@ func (m Model) internalView() string {
 	helpView := m.help.View(m.keys)
 	view += "\n" + helpView
 
-	return util.LastNLines(view, m.maxHeight)
+	return strings.Join(util.LastNLines(view, m.maxHeight), "\n")
 }
