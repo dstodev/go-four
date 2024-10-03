@@ -10,18 +10,18 @@ type Game struct {
 }
 
 func NewGame(sz ...int) Game {
-	rows_cols := 2
-	rows_cols_toWin := 3
-	rows_cols_toWin_maxTurns := 4
+	rowsCols := 2
+	rowsColsToWin := 3
+	rowsColsToWinMaxTurns := 4
 
 	switch len(sz) {
-	case rows_cols:
+	case rowsCols:
 		sz = []int{sz[0], sz[1], 4, 0}
 
-	case rows_cols_toWin:
+	case rowsColsToWin:
 		sz = []int{sz[0], sz[1], sz[2], 0}
 
-	case rows_cols_toWin_maxTurns:
+	case rowsColsToWinMaxTurns:
 		// use all values (skip default case)
 
 	default:

@@ -44,6 +44,7 @@ func TestFromBoardStringNone(t *testing.T) {
 	game := c4.NewGame(6, 7)
 	game = c4.FromBoardString(game, "")
 
+	util.AssertEqual(t, 0, game.TurnCount())
 	util.AssertEqual(t, c4.Initial, game.Status())
 }
 
@@ -71,8 +72,10 @@ func TestFromBoardStringInvalid(t *testing.T) {
 	game = c4.FromBoardString(game, "a")
 
 	util.AssertEqual(t, 0, game.TurnCount())
+	util.AssertEqual(t, c4.Initial, game.Status())
 
 	game = c4.FromBoardString(game, "0,a,1")
 
 	util.AssertEqual(t, 2, game.TurnCount())
+	util.AssertEqual(t, c4.Running, game.Status())
 }

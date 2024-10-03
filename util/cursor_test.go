@@ -8,9 +8,9 @@ import (
 
 func assertEqual(t *testing.T, c *util.Cursor, row, col int) {
 	t.Helper()
-	actual_row, actual_col := c.Get()
-	util.AssertEqual(t, row, actual_row)
-	util.AssertEqual(t, col, actual_col)
+	actualRow, actualCol := c.Get()
+	util.AssertEqual(t, row, actualRow)
+	util.AssertEqual(t, col, actualCol)
 	util.AssertEqual(t, row, c.Row())
 	util.AssertEqual(t, col, c.Col())
 }

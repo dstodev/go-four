@@ -8,30 +8,35 @@ import (
 func ToBoardString(game Game) string {
 	history := game.History()
 
-	var history_strs []string
+	var historyStrs []string
 
 	for _, column := range history {
-		history_str := strconv.Itoa(column)
-		history_strs = append(history_strs, history_str)
+		historyStr := strconv.Itoa(column)
+		historyStrs = append(historyStrs, historyStr)
 	}
 
-	return strings.Join(history_strs, ",")
+	return strings.Join(historyStrs, ",")
 }
 
 func FromBoardString(game Game, board_str string) Game {
-	if board_str == "" {
-		return game
-	}
-
-	game.Start() // Resets the game
-
 	history := strings.Split(board_str, ",")
 
-	for _, column := range history {
-		column, err := strconv.Atoi(column)
+	var columns []int
+
+	for _, columnStr := range history {
+		column, err := strconv.Atoi(columnStr)
+
 		if err == nil {
-			game.PlayTurn(column)
+			columns = append(columns, column)
 		}
+	}
+
+	if len(columns) > 0 {
+		game.Start() // Resets the game
+	}
+
+	for _, column := range columns {
+		game.PlayTurn(column)
 	}
 
 	return game
