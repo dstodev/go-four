@@ -280,10 +280,10 @@ func TestFullGamePlayerOneWinsVertical(t *testing.T) {
 	     0 1 2 3 4 5 6     0 1 2 3 4 5 6
 	   0 - - - - - - -   0 - - - - - - -
 	   1 - - - - - - -   1 - - - - - - -
-	   2 - - - - - - -   2 R - - - - - -
-	   3 R B - - - - -   3 R B - - - - -
-	   4 R B - - - - -   4 R B - - - - -
-	   5 R B - - - - -   5 R B - - - - -
+	   2 - - - - - - -   2 A - - - - - -
+	   3 A B - - - - -   3 A B - - - - -
+	   4 A B - - - - -   4 A B - - - - -
+	   5 A B - - - - -   5 A B - - - - -
 	*/
 
 	util.AssertEqual(t, c4.One, game.Board().Get(5, 0))

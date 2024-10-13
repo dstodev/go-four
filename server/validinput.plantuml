@@ -1,0 +1,22 @@
+@startuml ValidInput
+' https://plantuml.com/sequence-diagram
+
+title Handle player input: valid path
+actor Player
+participant Client as "Player's client"
+box Server
+participant Game as "Game container"
+participant InputQueue as "Input queue"
+end box
+actor Guest
+
+Player -> Client ++ : Input
+Client -> InputQueue ++ : Enqueue input
+InputQueue --> Game --++ : Dequeue input
+
+Game -> Game : Update with input
+Game -> Guest : Game state
+Game --> Client -- : Game state
+return
+
+@enduml
